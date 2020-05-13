@@ -1,0 +1,20 @@
+version: '2'
+
+services:
+  warehouse_web:
+    build: ./warehouse
+    command: bash -c "python3 ./users/manage.py runserver 0.0.0.0:8001"
+    volumes:
+      - .:/code
+    ports:
+      - 8001:8001
+    restart: always
+      
+  nginx:
+    build: ./web
+    ports:
+      - 80:80
+    links:
+      - warehouse_web
+    depends_on:
+      - warehouse_web

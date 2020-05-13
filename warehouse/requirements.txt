@@ -1,0 +1,9 @@
+Django
+djangorestframework
+djangorestframework_simplejwt
+psycopg2-binary
+gunicorn
+requests
+django-rest-swagger
+djoser
+django-cors-headers
