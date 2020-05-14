@@ -15,12 +15,16 @@ class WarehouseDetailsViewSet(viewsets.ModelViewSet):
 class WarehouseListCodeGetAPI(APIView):
     def get(self, request):
         qs = WarehouseDetails.objects.all()
-        data = [{item.id: item.warehouse_code} for item in qs]
+        data = {}
+        for item in qs:
+            data[item.id] = item.warehouse_code
         return Response(data)
 
 
 class WarehouseListAddressGetAPI(APIView):
     def get(self, request):
         qs = WarehouseDetails.objects.all()
-        data = [{item.id: item.warehouse_address} for item in qs]
+        data = {}
+        for item in qs:
+            data[item.id] = item.warehouse_address
         return Response(data)
