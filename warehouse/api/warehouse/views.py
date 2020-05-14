@@ -5,6 +5,6 @@ from .models import WarehouseDetails
 # Create your views here.
 
 
-class WarehouseDetailsViewSet(viewsets.ViewSet):
+class WarehouseDetailsViewSet(viewsets.ModelViewSet):
     queryset = WarehouseDetails.objects.all()
     serializer_class = WarehouseDetailsSerializer
