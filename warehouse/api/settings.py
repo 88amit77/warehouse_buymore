@@ -7,7 +7,7 @@ SECRET_KEY = 'qwertyui1234567sdfghj'
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['*', 'users_web']
+ALLOWED_HOSTS = ['*', 'warehouse_web']
 
 INSTALLED_APPS = [
 	'django.contrib.contenttypes',
@@ -16,7 +16,6 @@ INSTALLED_APPS = [
 	'rest_framework',
 	'rest_framework_swagger',
 	'api',
-	'djoser',
 	'corsheaders'
 ]
 
@@ -34,7 +33,7 @@ WSGI_APPLICATION = 'api.wsgi.application'
 DATABASES = {
 	'default': {
 		'ENGINE': 'django.db.backends.postgresql_psycopg2',
-		'NAME': 'users',
+		'NAME': 'warehouse',
 		'USER': 'postgres',
 		'PASSWORD': 'buymore2',
 		'HOST': 'buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com',
@@ -67,10 +66,7 @@ USE_L10N = True
 USE_TZ = True
 
 REST_FRAMEWORK = {
-	'UNAUTHENTICATED_USER': None,
-	'DEFAULT_AUTHENTICATION_CLASSES': [
-		'rest_framework_simplejwt.authentication.JWTAuthentication',
-	],
+	'UNAUTHENTICATED_USER': None
 }
 
 TEMPLATES = [
