@@ -5,6 +5,7 @@ from django.db import models
 class WarehouseDetails(models.Model):
     warehouse_code = models.CharField(max_length=50)
     warehouse_address = models.CharField(max_length=50)
+    which_warehouse = models.CharField(max_length=50, default='Buymore Warehouse')
     warehouse_latitude = models.CharField(max_length=50)
     warehouse_longitude = models.CharField(max_length=50)
     gst_number = models.CharField(max_length=100)
