@@ -1,15 +1,74 @@
 from django.shortcuts import render
-from .serializers import WarehouseDetailsSerializer
+from .serializers import WarehouseDetailsSerializer, WarehouseListSerializer
 from rest_framework import viewsets
 from .models import WarehouseDetails
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.pagination import PageNumberPagination
+from django.db.models import Q
+import requests
 # Create your views here.
+
+
+class CustomPageNumberPagination(PageNumberPagination):
+    page_size_query_param = 'page_size'
 
 
 class WarehouseDetailsViewSet(viewsets.ModelViewSet):
     queryset = WarehouseDetails.objects.all()
     serializer_class = WarehouseDetailsSerializer
+
+
+class WarehouseQueryViewSet(viewsets.ModelViewSet):
+    serializer_class = WarehouseDetailsSerializer
+    pagination_class = CustomPageNumberPagination
+
+    def get_queryset(self):
+        qs = WarehouseDetails.objects.all()
+        if 'keyword' in self.request.data:
+            qf = Q(warehouse_code__contains=self.request.data['keyword']) | \
+                 Q(warehouse_address__contains=self.request.data['keyword']) | \
+                 Q(city__contains=self.request.data['keyword']) | \
+                 Q(state__contains=self.request.data['keyword']) | \
+                 Q(gst_number__contains=self.request.data['keyword']) | \
+                 Q(pincode__contains=self.request.data['keyword']) | \
+                 Q(created_at__contains=self.request.data['keyword']) | \
+                 Q(updated_at__contains=self.request.data['keyword'])
+            qs = qs.filter(qf)
+        if 'warehouse_code' in self.request.data:
+            warehouse_code = self.request.data['warehouse_code'].split(',')
+            qs = qs.filter(warehouse_code__in=warehouse_code)
+        if 'warehouse_address' in self.request.data:
+            warehouse_address = self.request.data['warehouse_addeess'].split(',')
+            qs = qs.filter(warehouse_address__in=warehouse_address)
+        if 'city' in self.request.data:
+            city = self.request.data['city'].split(',')
+            qs = qs.filter(city__in=city)
+        if 'pincode' in self.request.data:
+            pincode = self.request.data['pincode'].split(',')
+            qs = qs.filter(pincode__in=pincode)
+        if 'state' in self.request.data:
+            state = self.request.data['state'].split(',')
+            qs = qs.filter(state__in=state)
+        if 'gst_number' in self.request.data:
+            gst_number = self.request.data['gst_number'].split(',')
+            qs = qs.filter(gst_number__in=gst_number)
+        if 'created_at' in self.request.data:
+            created_at = self.request.data['created_at'].split('/')
+            qs = qs.filter(created_at__range=created_at)
+        if 'updated_at' in self.request.data:
+            updated_at = self.request.data['updated_at'].split('/')
+            qs = qs.filter(updated_at__range=updated_at)
+        if 'sort_by' in self.request.data:
+            sort_key = self.request.data['sort_by']
+            if sort_key == 'warehouse_id':
+                sort_key = 'id'
+            sort_by = ''
+            if 'sort_order' in self.request.data and self.request.data['sort_order'] == 'desc':
+                sort_by = '-'
+            sort_by += sort_key
+            qs = qs.order_by(sort_by)
+        return qs
 
 
 class WarehouseListCodeGetAPI(APIView):
@@ -28,3 +87,101 @@ class WarehouseListAddressGetAPI(APIView):
         for item in qs:
             data[item.id] = item.warehouse_address
         return Response(data)
+
+
+class WarehouseListView(APIView):
+    def post(self, request):
+        columns = []
+        selected_headers = {}
+        filters = {}
+        sorting = {}
+        header = {
+            'id': 'Warehouse Id',
+            'warehouse_code': 'Warehouse Code',
+            'warehouse_address': 'Warehouse Address',
+            'city': 'City',
+            'pincode': 'Pincode',
+            'state': 'State',
+            'gst_number': 'GSTIN Number',
+            'created_at': 'Created At',
+            'updated_at': 'Updated At'
+        }
+        sticky_headers = [
+            'id',
+            'warehouse_code',
+            'warehouse_address'
+        ]
+
+        sortable = [
+            'id',
+            'warehouse_code',
+            'warehouse_address',
+            'city',
+            'pincode',
+            'state',
+            'gst_number',
+            'created_at',
+            'updated_at'
+        ]
+        date_filters = [
+            'created_at',
+            'updated_at'
+        ]
+        if 'columns' in request.data:
+            columns = request.data['columns'].split(',')
+            selected_headers = {i: columns[i] for i in range(0, len(columns))}
+        if 'page' in request.query_params:
+            page = request.query_params['page']
+        else:
+            page = 1
+        if 'page_size' in request.query_params:
+            page_size = request.query_params['page_size']
+        else:
+            page_size = 20
+        warehouses = requests.get('http://localhost:8001/warehouses/?page=' + str(page) + '&page_size=' + str(page_size),
+                               data=request.data).json()
+        data = []
+        warehouses_data = warehouses['results']
+
+        for i in range(len(warehouses_data)):
+            item = warehouses_data[i]
+            print(item)
+            warehouse_item = {
+                'warehouse_id': item['id'],
+                'warehouse_code': item['warehouse_code'],
+                'warehouse_address': item['warehouse_address'],
+                'city': item['city'],
+                'pincode': item['pincode'],
+                'state': item['state'],
+                'gst_number': item['gst_number'],
+                'created_at': item['created_at'],
+                'updated_at': item['updated_at']
+            }
+            data.append(warehouse_item)
+        new_data = []
+        if len(data):
+            serializer = WarehouseListSerializer(data, many=True)
+            if len(columns) > 0:
+                for obj in serializer.data:
+                    columns.append('warehouse_id')
+                    columns.append('warehouse_code')
+                    new_item = {key: value for (key, value) in obj.items() if key in columns}
+                    new_data.append(new_item)
+            else:
+                new_data = serializer.data
+            next_link = None
+            prev_link = None
+            if warehouses['next'] is not None:
+                next_link = '/list_warehouse/?' + warehouses['next'].split('?')[1]
+            if warehouses['previous'] is not None:
+                prev_link = '/list_warehouse/?' + warehouses['previous'].split('?')[1]
+            return Response({'count': warehouses['count'], 'next': next_link, 'previous': prev_link, 'header': header,
+                             'selected_headers': selected_headers, 'data': new_data, 'filters': filters,
+                             'date_filters': date_filters, 'sticky_headers': sticky_headers, 'sorting': sorting,
+                             'sortable': sortable, 'message': 'Warehouses fetched successfully'})
+        else:
+            data = []
+            return Response({'count': 0, 'next': None, 'previous': None, 'header': header, 'data': data,
+                             'selected_headers': selected_headers, 'filters': filters, 'date_filters': date_filters,
+                             'sticky_headers': sticky_headers, 'sorting': sorting, 'sortable': sortable,
+                             'message': 'No warehouse found'})
