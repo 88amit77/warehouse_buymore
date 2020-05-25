@@ -7,6 +7,13 @@ from .warehouse.views import (
     WarehouseListAddressGetAPI,
     WarehouseListView,
     WarehouseQueryViewSet,
+    WarehouseIdFilterView,
+    WarehouseCodeFilterView,
+    WarehouseAddressFilterView,
+    WarehouseCityFilterView,
+    WarehousePincodeFilterView,
+    WarehouseStateFilterView,
+    WarehouseGstFilterView
 )
 from rest_framework_swagger.views import get_swagger_view
 
@@ -16,8 +23,15 @@ router.register(r'warehouses', WarehouseQueryViewSet, basename='warehouses')
 schema_view = get_swagger_view(title='Microservice API')
 urlpatterns = [
     path('', include(router.urls)),
-    path("warehouse_code/", WarehouseListCodeGetAPI.as_view(), name='warehouse_code'),
-    path("warehouse_address/", WarehouseListAddressGetAPI.as_view(), name='warehouse_address'),
+    path("warehouse_code_filter/", WarehouseListCodeGetAPI.as_view(), name='warehouse_code'),
+    path("warehouse_address_filter/", WarehouseListAddressGetAPI.as_view(), name='warehouse_address'),
     path("list_warehouse/", WarehouseListView.as_view(), name='list_warehouse'),
+    path("warehouse_id/", WarehouseIdFilterView.as_view(), name='warehouse_id'),
+    path("warehouse_code/", WarehouseCodeFilterView.as_view(), name='warehouse_code_filter'),
+    path("warehouse_address/", WarehouseAddressFilterView.as_view(), name='warehouse_address_filter'),
+    path("city/", WarehouseCityFilterView.as_view(), name='city'),
+    path("pincode/", WarehousePincodeFilterView.as_view(), name='pincode'),
+    path("state/", WarehouseStateFilterView.as_view(), name='state'),
+    path("gst_number/", WarehouseGstFilterView.as_view(), name='gst_number'),
     path("docs/", schema_view),
 ]

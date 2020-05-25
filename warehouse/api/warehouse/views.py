@@ -185,3 +185,87 @@ class WarehouseListView(APIView):
                              'selected_headers': selected_headers, 'filters': filters, 'date_filters': date_filters,
                              'sticky_headers': sticky_headers, 'sorting': sorting, 'sortable': sortable,
                              'message': 'No warehouse found'})
+
+
+class WarehouseIdFilterView(APIView):
+    def get(self, request):
+        """
+        Warehouse Id filter
+        """
+        qs = WarehouseDetails.objects.distinct('id').all()
+        if 'warehouse_id' in request.query_params:
+            qs = qs.filter(id__contains=request.query_params['warehouse_id'])
+        data1 = [{data.id: data.id} for data in qs]
+        return Response(data1)
+
+
+class WarehouseCodeFilterView(APIView):
+    def get(self, request):
+        """
+        Warehouse code filter
+        """
+        qs = WarehouseDetails.objects.distinct('warehouse_code').all()
+        if 'warehouse_code' in request.query_params:
+            qs = qs.filter(warehouse_code__contains=request.query_params['warehouse_code'])
+        data1 = [{data.warehouse_code: data.warehouse_code} for data in qs]
+        return Response(data1)
+
+
+class WarehouseAddressFilterView(APIView):
+    def get(self, request):
+        """
+        Warehouse address filter
+        """
+        qs = WarehouseDetails.objects.distinct('warehouse_address').all()
+        if 'warehouse_address' in request.query_params:
+            qs = qs.filter(warehouse_address__contains=request.query_params['warehouse_address'])
+        data1 = [{data.warehouse_address: data.warehouse_address} for data in qs]
+        return Response(data1)
+
+
+class WarehouseCityFilterView(APIView):
+    def get(self, request):
+        """
+        Warehouse city filter
+        """
+        qs = WarehouseDetails.objects.distinct('city').all()
+        if 'city' in request.query_params:
+            qs = qs.filter(city__contains=request.query_params['city'])
+        data1 = [{data.city: data.city} for data in qs]
+        return Response(data1)
+
+
+class WarehousePincodeFilterView(APIView):
+    def get(self, request):
+        """
+        Warehouse pincode filter
+        """
+        qs = WarehouseDetails.objects.distinct('pincode').all()
+        if 'pincode' in request.query_params:
+            qs = qs.filter(pincode__contains=request.query_params['pincode'])
+        data1 = [{data.pincode: data.pincode} for data in qs]
+        return Response(data1)
+
+
+class WarehouseStateFilterView(APIView):
+    def get(self, request):
+        """
+        Warehouse state filter
+        """
+        qs = WarehouseDetails.objects.distinct('state').all()
+        if 'state' in request.query_params:
+            qs = qs.filter(state__contains=request.query_params['state'])
+        data1 = [{data.state: data.state} for data in qs]
+        return Response(data1)
+
+
+class WarehouseGstFilterView(APIView):
+    def get(self, request):
+        """
+        Warehouse gst number filter
+        """
+        qs = WarehouseDetails.objects.distinct('gst_number').all()
+        if 'gst_number' in request.query_params:
+            qs = qs.filter(gst_number__contains=request.query_params['gst_number'])
+        data1 = [{data.gst_number: data.gst_number} for data in qs]
+        return Response(data1)
