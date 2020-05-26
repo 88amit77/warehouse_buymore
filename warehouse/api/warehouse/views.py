@@ -26,7 +26,8 @@ class WarehouseQueryViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         qs = WarehouseDetails.objects.all()
         if 'keyword' in self.request.data:
-            qf = Q(warehouse_code__contains=self.request.data['keyword']) | \
+            qf = Q(id__contains=self.request.data['keyword']) | \
+                 Q(warehouse_code__contains=self.request.data['keyword']) | \
                  Q(warehouse_address__contains=self.request.data['keyword']) | \
                  Q(city__contains=self.request.data['keyword']) | \
                  Q(state__contains=self.request.data['keyword']) | \
@@ -35,11 +36,14 @@ class WarehouseQueryViewSet(viewsets.ModelViewSet):
                  Q(created_at__contains=self.request.data['keyword']) | \
                  Q(updated_at__contains=self.request.data['keyword'])
             qs = qs.filter(qf)
+        if 'warehouse_id' in self.request.data:
+            warehouse_id = self.request.data['warehouse_id'].split(',')
+            qs = qs.filter(id__in=warehouse_id)
         if 'warehouse_code' in self.request.data:
             warehouse_code = self.request.data['warehouse_code'].split(',')
             qs = qs.filter(warehouse_code__in=warehouse_code)
         if 'warehouse_address' in self.request.data:
-            warehouse_address = self.request.data['warehouse_addeess'].split(',')
+            warehouse_address = self.request.data['warehouse_address'].split(',')
             qs = qs.filter(warehouse_address__in=warehouse_address)
         if 'city' in self.request.data:
             city = self.request.data['city'].split(',')
@@ -96,7 +100,7 @@ class WarehouseListView(APIView):
         filters = {}
         sorting = {}
         header = {
-            'id': 'Warehouse Id',
+            'warehouse_id': 'Warehouse Id',
             'warehouse_code': 'Warehouse Code',
             'warehouse_address': 'Warehouse Address',
             'city': 'City',
@@ -107,13 +111,13 @@ class WarehouseListView(APIView):
             'updated_at': 'Updated At'
         }
         sticky_headers = [
-            'id',
+            'warehouse_id',
             'warehouse_code',
             'warehouse_address'
         ]
 
         sortable = [
-            'id',
+            'warehouse_id',
             'warehouse_code',
             'warehouse_address',
             'city',
@@ -165,6 +169,7 @@ class WarehouseListView(APIView):
                 for obj in serializer.data:
                     columns.append('warehouse_id')
                     columns.append('warehouse_code')
+                    columns.append('warehouse_address')
                     new_item = {key: value for (key, value) in obj.items() if key in columns}
                     new_data.append(new_item)
             else:
