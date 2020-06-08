@@ -12,7 +12,7 @@ ALLOWED_HOSTS = ['*', 'warehouse_web']
 INSTALLED_APPS = [
 	'django.contrib.staticfiles',
 	'rest_framework',
-	'rest_framework_swagger',
+	'drf-yasg',
 	'api',
 	'corsheaders'
 ]
