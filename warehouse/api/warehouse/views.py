@@ -274,3 +274,10 @@ class WarehouseGstFilterView(APIView):
             qs = qs.filter(gst_number__contains=request.query_params['gst_number'])
         data1 = [{data.gst_number: data.gst_number} for data in qs]
         return Response(data1)
+
+
+class WarehouseSelectView(APIView):
+    def get(self, request):
+        warehouses = WarehouseDetails.objects.filter(which_warehouse="Buymore Warehouse")
+        result = [{warehouse.id: warehouse.warehouse_address} for warehouse in warehouses]
+        return Response(result)

@@ -10,18 +10,19 @@ DEBUG = True
 ALLOWED_HOSTS = ['*', 'warehouse_web']
 
 INSTALLED_APPS = [
-	'django.contrib.staticfiles',
-	'rest_framework',
-	'drf_yasg',
-	'api',
-	'corsheaders'
+    'django.contrib.staticfiles',
+    'rest_framework',
+    'drf_yasg',
+    'django_crontab',
+    'api',
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
-	'django.middleware.security.SecurityMiddleware',
-	'corsheaders.middleware.CorsMiddleware',
-	'django.middleware.common.CommonMiddleware',
-	'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
 ROOT_URLCONF = 'api.urls'
@@ -29,28 +30,28 @@ ROOT_URLCONF = 'api.urls'
 WSGI_APPLICATION = 'api.wsgi.application'
 
 DATABASES = {
-	'default': {
-		'ENGINE': 'django.db.backends.postgresql_psycopg2',
-		'NAME': 'warehouse',
-		'USER': 'postgres',
-		'PASSWORD': 'buymore2',
-		'HOST': 'buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com',
-		'PORT': '',
-	}
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'warehouse',
+        'USER': 'postgres',
+        'PASSWORD': 'buymore2',
+        'HOST': 'buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com',
+        'PORT': '',
+    }
 }
 
 SIMPLE_JWT = {
-	'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_TYPES': ('Bearer',),
 
-	'USER_ID_FIELD': 'id',
-	'PAYLOAD_ID_FIELD': 'user_id',
+    'USER_ID_FIELD': 'id',
+    'PAYLOAD_ID_FIELD': 'user_id',
 
-	'TOKEN_LIFETIME': timedelta(days=1),
-	'TOKEN_REFRESH_LIFETIME': timedelta(days=7),
+    'TOKEN_LIFETIME': timedelta(days=1),
+    'TOKEN_REFRESH_LIFETIME': timedelta(days=7),
 
-	'SIGNING_KEY': SECRET_KEY,  # Default to the django secret key
+    'SIGNING_KEY': SECRET_KEY,  # Default to the django secret key
 
-	'TOKEN_BACKEND': 'rest_framework_simplejwt.backends.TokenBackend',
+    'TOKEN_BACKEND': 'rest_framework_simplejwt.backends.TokenBackend',
 }
 
 LANGUAGE_CODE = 'en-us'
@@ -64,23 +65,23 @@ USE_L10N = True
 USE_TZ = True
 
 REST_FRAMEWORK = {
-	'UNAUTHENTICATED_USER': None
+    'UNAUTHENTICATED_USER': None
 }
 
 TEMPLATES = [
-	{
-		'BACKEND': 'django.template.backends.django.DjangoTemplates',
-		'DIRS': [],
-		'APP_DIRS': True,
-		'OPTIONS': {
-			'context_processors': [
-				'django.template.context_processors.debug',
-				'django.template.context_processors.request',
-				'django.contrib.auth.context_processors.auth',
-				'django.contrib.messages.context_processors.messages',
-			],
-		},
-	},
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
 ]
 
 STATIC_URL = '/static/'
@@ -88,3 +89,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 CORS_ORIGIN_ALLOW_ALL = True
+
+CRONJOBS = [
+    ('* * * * *', '.picklist.cron.generate_picklist', '>> /home/pace/Documents/python/Buymore 2.0/Warehouse/file.log'),
+]
