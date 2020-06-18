@@ -9,7 +9,7 @@ class Picklist(models.Model):
     shipout_time = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=50)
     type = models.CharField(max_length=50)
-    portals = ArrayField(models.CharField(max_length=200), blank=True)
+    portals = ArrayField(models.IntegerField(), blank=True)
     quantity = models.IntegerField()
     warehouse_id = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -18,7 +18,6 @@ class Picklist(models.Model):
 class PicklistItems(models.Model):
     picklist_id = models.IntegerField()
     portal_new_order_id = models.IntegerField()
-    shipout_time = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=50)
     found = models.CharField(max_length=50)
     remarks = models.CharField(max_length=200)

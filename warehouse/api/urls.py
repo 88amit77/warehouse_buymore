@@ -34,7 +34,8 @@ from .picklist.views import (
     ImageCorrectness,
     DimensionCorrectness,
     Status,
-    ProductCondition
+    ProductCondition,
+    GeneratePicklist
 )
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
@@ -70,6 +71,7 @@ urlpatterns = [
     path("state/", WarehouseStateFilterView.as_view(), name='state'),
     path("gst_number/", WarehouseGstFilterView.as_view(), name='gst_number'),
     path('create_picklist/', CreatePicklist.as_view(), name='create_picklist'),
+    path('generate_picklist/', GeneratePicklist.as_view(), name='generate_picklist'),
     path('list_picklist/', ListPicklist.as_view(), name='list_picklist'),
     path('assign_picklist/', AssignPicklist.as_view(), name='assign_picklist'),
     path('picklistitem_collect/', PicklistItemCollectView.as_view(), name='picklistitem_collect'),

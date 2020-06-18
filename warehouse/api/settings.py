@@ -15,7 +15,9 @@ INSTALLED_APPS = [
     'drf_yasg',
     'django_crontab',
     'api',
-    'corsheaders'
+    'corsheaders',
+    'xhtml2pdf',
+    'barcode'
 ]
 
 MIDDLEWARE = [
@@ -33,6 +35,22 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'warehouse',
+        'USER': 'postgres',
+        'PASSWORD': 'buymore2',
+        'HOST': 'buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com',
+        'PORT': '',
+    },
+    'orders': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'orders',
+        'USER': 'postgres',
+        'PASSWORD': 'buymore2',
+        'HOST': 'buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com',
+        'PORT': '',
+    },
+    'products': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'products',
         'USER': 'postgres',
         'PASSWORD': 'buymore2',
         'HOST': 'buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com',
@@ -71,7 +89,7 @@ REST_FRAMEWORK = {
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, "templates")],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -93,3 +111,4 @@ CORS_ORIGIN_ALLOW_ALL = True
 CRONJOBS = [
     ('* * * * *', '.picklist.cron.generate_picklist', '>> /home/pace/Documents/python/Buymore 2.0/Warehouse/file.log'),
 ]
+

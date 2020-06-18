@@ -7,13 +7,13 @@ services:
     volumes:
       - .:/code
     ports:
-      - 8004:8001
+      - 8001:8001
     restart: always
       
   nginx:
     build: ./web
     ports:
-      - 8099:80
+      - 80:80
     links:
       - warehouse_web
     depends_on:

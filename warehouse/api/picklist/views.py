@@ -3,6 +3,7 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.pagination import PageNumberPagination
+from .render import Render
 from .models import (
     Picklist,
     PicklistItemAlternate,
@@ -11,6 +12,8 @@ from .models import (
     PicklistItemProcessing,
     PicklistProcessingMonitor
 )
+from .orders import ApiNeworder
+from .products import MasterMasterproduct, MasterPortalaccount, AmazonAmazonproducts, FlipkartFlipkartproducts
 from .serializers import (
     PicklistSerializer,
     PicklistItemAlternateSerializer,
@@ -22,7 +25,11 @@ from .serializers import (
 )
 from django.db.models import Q
 import requests
+from io import BytesIO
 from datetime import datetime
+import barcode
+# from barcode import EAN13
+from barcode.writer import ImageWriter
 # Create your views here.
 
 
@@ -248,3 +255,107 @@ class Status(APIView):
             "True": "Pass",
             "False": "Fail"
         })
+
+
+class GeneratePicklist(APIView):
+    def get(self, request):
+        item_list = [
+            {
+                "sku": "TEST_PRODUCT",
+                "portal": "Amazon",
+                "listingId": "-",
+                "fsku": "X000001",
+                "bin": "A0001",
+                "title": "Test product",
+                "quantity": 1
+            },
+            {
+                "sku": "TEST_PRODUCT_2",
+                "portal": "Amazon",
+                "listingId": "-",
+                "fsku": "X000002",
+                "bin": "A0002",
+                "title": "Test product 2",
+                "quantity": 1
+            }
+        ]
+        picklist_barcode = barcode.get('code128', 'PQSBH0000001', writer=ImageWriter())
+        barfile = picklist_barcode.save('PQSBH0000001')
+        data = {
+            'item_list': item_list,
+            'picklist_id': 'PQSBH0000001',
+            'picklist_barcode': barfile,
+            'shipout_time': 'Not Found'
+        }
+        print(item_list)
+        file = Render.render_to_file('template.html', data)
+        return Response({"message": "Saved"})
+        picklist = Picklist.objects.filter(status='Created').first()
+        quantity = str(picklist.quantity)
+        portals = ",".join([str(v) for v in picklist.portals])
+        existing_orders_query = PicklistItems.objects.distinct('portal_new_order_id').all()
+        existing_orders = ",".join([str(item.portal_new_order_id) for item in existing_orders_query])
+        query = 'Select * from api_neworder  inner join api_dispatchdetails ' \
+                'on api_neworder.dd_id = api_dispatchdetails.dipatch_details_id  ' \
+                'where api_dispatchdetails.is_mark_placed=TRUE and api_dispatchdetails.packing_status=FALSE and ' \
+                'api_dispatchdetails.is_dispatch=FALSE and ' \
+                'api_neworder.portal_id IN(' + str(portals) + ')'
+        if existing_orders != '':
+            query += ' and api_neworder.buymore_order_id not in ('+existing_orders+')'
+        query += ' LIMIT ' + str(quantity)
+        orders = ApiNeworder.objects.using('orders')\
+            .raw(query)
+        print(bool(orders))
+        if bool(orders):
+            picklist.status = 'Generating'
+            picklist.save()
+            total = 0
+            item_list = []
+            for order in orders:
+                picklist_item = PicklistItems()
+                picklist_item.picklist_id = picklist.id
+                picklist_item.portal_new_order_id = order.buymore_order_id
+                picklist_item.status = 'Pending'
+                picklist_item.save()
+
+                # product = MasterMasterproduct.objects.using('products').get(product_id=order.product_id)
+                # item = {
+                #     'fsku': product.buymore_sku,
+                #     'title': product.product_name,
+                #     'bin': order.bin_id,
+                #     'quantity': order.qty
+                # }
+
+                item = {
+                    'fsku': 'X00001',
+                    'title': 'Test',
+                    'bin': 'Test',
+                    'quantity': 1
+                }
+                portal = MasterPortalaccount.objects.using('products').get(portal_id=order.portal_id)
+
+                item['portal_name'] = portal.portal_name
+                if order.portal_id == 1:
+                    # amazon_product = AmazonAmazonproducts.objects.using('products').get(product_id=order.product_id)
+                    # item.sku = amazon_product['amazon_portal_sku']
+                    # item.listingId = ''
+                    item['sku'] = 'Test'
+                    item['listingId'] = ''
+                if order.portal_id == 2:
+                    flipkart_product = FlipkartFlipkartproducts.objects.using('products').get(product_id=order.product_id)
+                    item.sku = flipkart_product.flipkart_portal_sku
+                    item.listingId = flipkart_product.flipkart_listing_id
+                total += 1
+                item_list.append(item)
+            picklist.total_orders = total
+            picklist.status = 'Generated'
+            picklist.save()
+            data = {
+                'item_list': item_list,
+                'picklist_id': picklist.picklist_id
+            }
+            print(item_list)
+            file = Render.render_to_file('../../templates/template.html', data)
+        else:
+            return Response({"message": "Cannot generate file"})
+        return Response({"message": "File Generated"})
