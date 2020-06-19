@@ -71,7 +71,6 @@ urlpatterns = [
     path("state/", WarehouseStateFilterView.as_view(), name='state'),
     path("gst_number/", WarehouseGstFilterView.as_view(), name='gst_number'),
     path('create_picklist/', CreatePicklist.as_view(), name='create_picklist'),
-    path('generate_picklist/', GeneratePicklist.as_view(), name='generate_picklist'),
     path('list_picklist/', ListPicklist.as_view(), name='list_picklist'),
     path('assign_picklist/', AssignPicklist.as_view(), name='assign_picklist'),
     path('picklistitem_collect/', PicklistItemCollectView.as_view(), name='picklistitem_collect'),
