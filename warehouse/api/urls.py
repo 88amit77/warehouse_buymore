@@ -35,7 +35,6 @@ from .picklist.views import (
     DimensionCorrectness,
     Status,
     ProductCondition,
-    GeneratePicklist
 )
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
