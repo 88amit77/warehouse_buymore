@@ -13,11 +13,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'drf_yasg',
-    'django_crontab',
     'api',
     'corsheaders',
-    'xhtml2pdf',
-    'barcode'
 ]
 
 MIDDLEWARE = [
