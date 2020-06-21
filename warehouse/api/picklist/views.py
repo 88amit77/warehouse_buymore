@@ -274,4 +274,4 @@ class BarcodeGenerator(APIView):
         code = request.data['barcode']
         barcode = get_barcode(value=code, width=600)
         databar = b64encode(renderPM.drawToString(barcode, fmt='PNG'))
-        return Response({'barfile': "<img src='data:image/png;base64,{0}'>".format(databar)})
+        return Response({'barfile': databar})
