@@ -35,6 +35,7 @@ from .picklist.views import (
     DimensionCorrectness,
     Status,
     ProductCondition,
+    BarcodeGenerator
 )
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
@@ -80,7 +81,7 @@ urlpatterns = [
     path('dimension_correctness/', DimensionCorrectness.as_view(), name='size_correctness'),
     path('image_correctness/', ImageCorrectness.as_view(), name='image_correctness'),
     path('product_condition/', ProductCondition.as_view(), name='product_condition'),
+    path('get_barcode/', BarcodeGenerator.as_view(), name='get_barcode'),
     path('status/', Status.as_view(), name='status'),
     path("docs/", schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 ]
-

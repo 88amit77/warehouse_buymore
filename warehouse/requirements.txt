@@ -6,3 +6,4 @@ gunicorn
 requests
 drf-yasg
 django-cors-headers
+reportlab
