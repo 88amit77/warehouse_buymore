@@ -94,6 +94,7 @@ class CreatePicklist(APIView):
             'warehouse_id': warehouseId
         }
         picklist = Picklist.objects.create(**pickist_data)
+        requests.get('https://sudzmhmdh1.execute-api.ap-south-1.amazonaws.com/default/generate_picklist')
         return Response({"message": "Picklist created successfully"}, status=201)
 
 
