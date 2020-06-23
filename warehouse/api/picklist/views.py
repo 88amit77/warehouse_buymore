@@ -52,6 +52,7 @@ class CustomPageNumberPagination(PageNumberPagination):
 class PicklistView(viewsets.ModelViewSet):
     queryset = Picklist.objects.all()
     serializer_class = PicklistSerializer
+    pagination_class = CustomPageNumberPagination
 
 
 class PicklistItemsView(viewsets.ModelViewSet):
@@ -100,23 +101,80 @@ class CreatePicklist(APIView):
 
 class ListPicklist(APIView):
     def post(self, request):
-        picklists = Picklist.objects.all()
+
+        headers = {
+            "picklist_id": "Picklist Id",
+            "total_orders": "Total Orders",
+            "shipout_time": "Shipout Time",
+            "status": "Status",
+            "type": "Type",
+            "assigned_to": "Assigned To",
+            "packed_by": "Packed By",
+            "packed_quantity": "Packed Quantity",
+            "created_at": "Created At",
+        }
+        sortable = [
+            "picklist_id",
+            "total_orders",
+            "shipout_time",
+            "status",
+            "type",
+            "assigned_to",
+            "packed_by",
+            "packed_quantity",
+            "created_at"
+        ]
+        columns = []
+        date_filters = ["shipout_time", "created_at"]
+        selected_headers = {}
+        if 'columns' in request.data:
+            columns = request.data['columns'].split(',')
+            selected_headers = {i: columns[i] for i in range(0, len(columns))}
+        selected_headers = []
         data = []
+        if 'page' in request.query_params:
+            page = request.query_params['page']
+        else:
+            page = 1
+        if 'page_size' in request.query_params:
+            page_size = request.query_params['page_size']
+        else:
+            page_size = 20
+        picklists_data = dict(requests.get('http://localhost:8001/picklist/?page=' + str(page) + '&page_size='+ str(page_size)).json())
+        print(picklists_data)
+        picklists = picklists_data['results']
         for picklist in picklists:
             data.append({
-                "id": picklist.id,
-                "picklist_id": picklist.picklist_id,
-                "total_orders": picklist.total_orders,
-                "shipout_time": picklist.shipout_time,
-                "status": picklist.status,
-                "type": picklist.type,
+                "id": picklist['id'],
+                "picklist_id": picklist['picklist_id'],
+                "total_orders": picklist['total_orders'],
+                "shipout_time": picklist['shipout_time'],
+                "status": picklist['status'],
+                "type": picklist['type'],
                 "assigned_to": "",
                 "packed_by": "",
                 "packed_quantity": 0,
-                "created_at": picklist.created_at
+                "created_at": picklist['created_at']
             })
+        next_link = None
+        prev_link = None
+        if picklists_data['next'] is not None:
+            next_link = '/list_picklist/?' + picklists_data['next'].split('?')[1]
+        if picklists_data['previous'] is not None:
+            prev_link = '/list_picklist/?' + picklists_data['previous'].split('?')[1]
+        new_data = []
+        if len(data):
+            if len(columns) > 0:
+                for obj in data:
+                    new_item = {key: value for (key, value) in obj.items() if key in columns}
+                    new_data.append(new_item)
+            else:
+                new_data = data
+
         # data = PicklistListSerializer(data, many=True)
-        return Response(data)
+        return Response({"count": picklists_data['count'], 'next': next_link, 'previous': prev_link, "headers": headers,
+                         "sortable": sortable, 'selected_headers': selected_headers, "date_filters": date_filters,
+                         "data": new_data})
 
 
 class AssignPicklist(APIView):

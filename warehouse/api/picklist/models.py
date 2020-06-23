@@ -56,9 +56,9 @@ class PicklistItemProcessing(models.Model):
 class PicklistProcessingMonitor(models.Model):
     picklist_id = models.IntegerField()
     picklist_file = models.TextField(null=True, blank=True)
-    user_id = models.IntegerField()
-    start_at = models.DateTimeField()
+    user_id = models.IntegerField(null=True, blank=True)
+    start_at = models.DateTimeField(null=True, blank=True)
     end_at = models.DateTimeField(null=True, blank=True)
     items_processed = models.IntegerField(null=True, blank=True)
-    status = models.BooleanField()
+    status = models.BooleanField(null=True, blank=True)
 
