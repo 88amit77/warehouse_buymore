@@ -14,7 +14,8 @@ from .warehouse.views import (
     WarehousePincodeFilterView,
     WarehouseStateFilterView,
     WarehouseGstFilterView,
-    WarehouseSelectView
+    WarehouseSelectView,
+    GetDropboxFile
 )
 from .picklist.views import (
     PicklistView,
@@ -82,6 +83,7 @@ urlpatterns = [
     path('image_correctness/', ImageCorrectness.as_view(), name='image_correctness'),
     path('product_condition/', ProductCondition.as_view(), name='product_condition'),
     path('get_barcode/', BarcodeGenerator.as_view(), name='get_barcode'),
+    path('get_temp_link/', GetDropboxFile.as_view(), name='get_temp_link'),
     path('status/', Status.as_view(), name='status'),
     path("docs/", schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 ]

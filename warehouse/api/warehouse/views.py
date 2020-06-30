@@ -7,8 +7,9 @@ from rest_framework.views import APIView
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import Q
 import requests
+import dropbox
 # Create your views here.
-
+from datetime import timedelta, datetime
 
 class CustomPageNumberPagination(PageNumberPagination):
     page_size_query_param = 'page_size'
@@ -281,3 +282,30 @@ class WarehouseSelectView(APIView):
         warehouses = WarehouseDetails.objects.filter(which_warehouse="Buymore Warehouse")
         result = [{warehouse.id: warehouse.warehouse_address} for warehouse in warehouses]
         return Response(result)
+
+
+class GetDropboxFile(APIView):
+    def get(self, request):
+        id = request.data['id']
+        export_data = dict(requests.get('http://13.232.166.20/create_export/'+ str(id) +'/').json())
+
+        folder_url = export_data['exfile_url']
+        folder_url_created = export_data['exfile_url_time']
+        folder_time = datetime. strptime(folder_url_created.split('.')[0], '%Y-%m-%dT%H:%M:%S')
+        print(folder_url_created)
+        if folder_url_created is not None:
+            time_delta = (datetime.now() - folder_time)
+            total_time = time_delta.total_seconds() / 3600
+            if total_time < 1:
+                return Response({'link': folder_url})
+        folder_path = export_data['exfile_path']
+        access_token = 'd7ElXR2Sr-AAAAAAAAAAC2HC0qc45ss1TYhRYB4Jy6__NJU1jjGiffP7LlP_2rrf'
+        dbx = dropbox.Dropbox(access_token)
+        link = dbx.files_get_temporary_link(folder_path ).link
+        request_data = {
+            'exfile_isdownloaded': True,
+            'exfile_url': link,
+            'exfile_url_time': datetime.now()
+        }
+        requests.patch('http://13.232.166.20/create_export/'+ str(id) +'/', data=request_data).json()
+        return Response({'link': link})
