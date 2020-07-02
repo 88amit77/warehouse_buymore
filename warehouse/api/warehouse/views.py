@@ -75,6 +75,9 @@ class WarehouseQueryViewSet(viewsets.ModelViewSet):
             qs = qs.order_by(sort_by)
         return qs
 
+    class Meta:
+        ordering = ['id']
+
 
 class WarehouseListCodeGetAPI(APIView):
     def get(self, request):
