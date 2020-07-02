@@ -3,18 +3,9 @@ version: '2'
 services:
   warehouse_web:
     build: ./warehouse
-    command: bash -c "python3 ./warehouse/manage.py runserver 0.0.0.0:8001"
+    command: bash -c "cd warehouse && gunicorn api.wsgi --bind 0.0.0.0:80 --reload"
     volumes:
       - .:/code
     ports:
-      - 8001:8001
-    restart: always
-      
-  nginx:
-    build: ./web
-    ports:
       - 80:80
-    links:
-      - warehouse_web
-    depends_on:
-      - warehouse_web
+    restart: always
