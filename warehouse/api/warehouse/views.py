@@ -143,7 +143,7 @@ class WarehouseListView(APIView):
             page_size = request.query_params['page_size']
         else:
             page_size = 20
-        warehouses = requests.get('http://localhost/warehouse//warehouses/?page=' + str(page) + '&page_size=' + str(page_size),
+        warehouses = requests.get('http://localhost/warehouse/warehouses/?page=' + str(page) + '&page_size=' + str(page_size),
                                data=request.data).json()
         data = []
         warehouses_data = warehouses['results']

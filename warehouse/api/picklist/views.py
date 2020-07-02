@@ -140,7 +140,7 @@ class ListPicklist(APIView):
             page_size = request.query_params['page_size']
         else:
             page_size = 20
-        picklists_data = dict(requests.get('http://localhost/warehouse//picklist/?page=' + str(page) + '&page_size='+ str(page_size)).json())
+        picklists_data = dict(requests.get('http://localhost/warehouse/picklist/?page=' + str(page) + '&page_size='+ str(page_size)).json())
         print(picklists_data)
         picklists = picklists_data['results']
         for picklist in picklists:
