@@ -29,6 +29,16 @@ from reportlab.lib import units
 from reportlab.graphics import renderPM
 from reportlab.graphics.barcode import createBarcodeDrawing
 from reportlab.graphics.shapes import Drawing
+import psycopg2
+
+
+conn_orders = psycopg2.connect(database="orders", user="postgres", password="buymore2",
+                                     host="buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com", port="5432")
+cur_orders = conn_orders.cursor()
+
+conn_products = psycopg2.connect(database="products", user="postgres", password="buymore2",
+                                     host="buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com", port="5432")
+cur_products = conn_products.cursor()
 
 
 def get_barcode(value, width, barWidth = 0.05 * units.inch, fontSize = 30, humanReadable = True):
@@ -140,10 +150,16 @@ class ListPicklist(APIView):
             page_size = request.query_params['page_size']
         else:
             page_size = 20
-        picklists_data = dict(requests.get('http://localhost/warehouse/picklist/?page=' + str(page) + '&page_size='+ str(page_size)).json())
-        print(picklists_data)
+        picklists_data = dict(requests.get('http://localhost:8005/warehouse/picklist/?page=' + str(page) + '&page_size='+ str(page_size)).json())
+
         picklists = picklists_data['results']
         for picklist in picklists:
+            assignee_data = PicklistAssignee.objects.filter(picklist_id=picklist['id']).first()
+            if assignee_data is not None:
+                assignee = assignee_data.user_id
+            else:
+                assignee = None
+
             data.append({
                 "id": picklist['id'],
                 "picklist_id": picklist['picklist_id'],
@@ -151,7 +167,7 @@ class ListPicklist(APIView):
                 "shipout_time": picklist['shipout_time'],
                 "status": picklist['status'],
                 "type": picklist['type'],
-                "assigned_to": "",
+                "assigned_to": assignee,
                 "packed_by": "",
                 "packed_quantity": 0,
                 "created_at": picklist['created_at']
@@ -196,7 +212,7 @@ class PicklistItemCollectView(APIView):
     def post(self, request):
         picklist_item_id = request.data['id']
         picklist_item = PicklistItems.objects.get(id=picklist_item_id)
-        picklist_id = picklist_item['picklist_id']
+        picklist_id = picklist_item.picklist_id
         found = request.data['found']
         remarks = request.data['remarks']
         picklist_item.found = found
@@ -209,8 +225,9 @@ class PicklistItemCollectView(APIView):
                 'product_id': product_id
             }
             picklist_item_alternate = PicklistItemAlternate.objects.create(**picklist_item_alternate_data)
+        picklist_item.status = 'Collected'
         picklist_item.save()
-        picklist = Picklist.object.get(id=picklist_id)
+        picklist = Picklist.objects.get(id=picklist_id)
         total_orders = picklist.total_orders
         picklist_items_count = PicklistItems.objects.filter(picklist_id=picklist_id).filter(status='Collected').count()
         if total_orders == picklist_items_count:
@@ -223,8 +240,8 @@ class PicklistItemCollectView(APIView):
 
 class PicklistCheckView(APIView):
     def get(self, request):
-        picklist_id = request.data['picklist_id']
-        picklist = Picklist.object.get(picklist_id=picklist_id)
+        picklist_id = request.query_params['picklist_id']
+        picklist = Picklist.objects.get(picklist_id=picklist_id)
         if bool(picklist):
             id = picklist.id
             picklist_status = picklist.status
@@ -242,40 +259,53 @@ class PicklistCheckView(APIView):
             return Response({"status": False, "message": "Picklist does not exist"})
 
 
-def get_product_by_fnsku(fnsku):
-    return 1
+def get_order_by_fnsku(fnsku, picklist_id):
+
+    cur_orders.execute("Select dd_id from api_neworder no inner join api_dispatchdetails dd on no.dd_id = dd.dd_id_id "
+                       "where no.buymore_sku='" + fnsku + "' and dd.picklist_id=" + str(picklist_id))
+    order = cur_orders.fetchone()
+
+    return order[0]
 
 
 def get_order_data(order_id):
-    return 1
+    cur_orders.execute("Select product_id, portal_sku, buymore_sku from api_neworder where dd_id=" + str(order_id))
+    order = cur_orders.fetchone()
+    product_id = order[0]
+    sku = order[1]
+    fnsku = order[2]
+    cur_products.execute("Select product_name, product_length, product_breath, product_width, product_weight, image_url from master_masterproduct where product_id = " + str(product_id))
+    product_data = cur_products.fetchone()
+
+    return {
+        "product_image": product_data[5],
+        "title": product_data[0],
+        "sku": sku,
+        "fnsku": fnsku,
+        "length": product_data[1],
+        "breadth": product_data[2],
+        "height": product_data[3],
+        "weight": product_data[4]
+     }
 
 
 class PicklistProcessingFnskuCheck(APIView):
     def get(self, request):
-        picklist_id = request.data['picklist_id']
+        picklist_id = request.query_params['picklist_id']
         picklist = Picklist.objects.get(picklist_id=picklist_id)
         id = picklist.id
-        order_id = picklist.portal_new_order_id
-        fnsku = request.data['fnsku']
-        product_id = get_product_by_fnsku(fnsku)
-        picklist_item = PicklistItems.objects.get(picklist_id=id).flter(product_id=product_id)
+        fnsku = request.query_params['fnsku']
+        order_id = get_order_by_fnsku(fnsku, id)
+        picklist_item = PicklistItems.objects.get(picklist_id=id, portal_new_order_id=order_id)
         if bool(picklist_item):
             picklist_item_id = picklist_item.id
-            picklist_item_processing = PicklistItemProcessing.objects.get(picklist_item_id=picklist_item_id)
-            if bool(picklist_item_processing):
+            print(picklist_item_id)
+            picklist_item_processing = PicklistItemProcessing.objects.filter(picklist_item_id=picklist_item_id).first()
+            if picklist_item_processing is not None:
                 return Response({"status": False, "message": "Item is already processed"})
             else:
-                # order_data = get_order_data(order_id)
-                # product_data = get_product_data(product_id)
-                return Response({
-                    "product_image": "",
-                    "title": "title",
-                    "sku": "",
-                    "fnsku": "",
-                    "length": "",
-                    "breadth": "",
-                    "height": "",
-                 })
+                order_data = get_order_data(order_id)
+                return Response(order_data)
         else:
             return Response({"status": False, "message": "Picklist item does not exist"})
 
