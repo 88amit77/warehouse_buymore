@@ -17,6 +17,10 @@ from .serializers import (
     PicklistItemsSerializer,
     PicklistAssigneeSerializer,
     PicklistListSerializer,
+    CreatePicklistSerializer,
+    CreatePicklistResponseSerializer,
+    AssignPicklistSerializer,
+    AssignPicklistResponseSerializer,
     PicklistItemProcessingSerializer,
     PicklistProcessingMonitorSerializer
 )
@@ -30,6 +34,8 @@ from reportlab.graphics import renderPM
 from reportlab.graphics.barcode import createBarcodeDrawing
 from reportlab.graphics.shapes import Drawing
 import psycopg2
+from drf_yasg.utils import swagger_auto_schema
+import json
 
 
 conn_orders = psycopg2.connect(database="orders", user="postgres", password="buymore2",
@@ -91,6 +97,12 @@ class PicklistProcessingMonitorView(viewsets.ModelViewSet):
 
 
 class CreatePicklist(APIView):
+
+    @swagger_auto_schema(operation_description="Create Picklist from following params: "
+                                               "\n Portals - comma separated portal ids, "
+                                               "\n wid: warehouse Id,\n quantity no. of orders in picklist",
+                         request_body=CreatePicklistSerializer,
+                         responses={201: CreatePicklistResponseSerializer, 400: "string"})
     def post(self, request):
         portals = request.data['portals'].split(',')
         quantity = request.data['quantity']
@@ -104,9 +116,13 @@ class CreatePicklist(APIView):
             'quantity': quantity,
             'warehouse_id': warehouseId
         }
-        picklist = Picklist.objects.create(**pickist_data)
-        requests.get('https://sudzmhmdh1.execute-api.ap-south-1.amazonaws.com/default/generate_picklist')
-        return Response({"message": "Picklist created successfully"}, status=201)
+        serializer = PicklistSerializer(data=pickist_data)
+        if serializer.is_valid():
+            serializer.save()
+            requests.get('https://sudzmhmdh1.execute-api.ap-south-1.amazonaws.com/default/generate_picklist')
+            return Response({"message": "Picklist created successfully", "data": serializer.data}, status=201)
+        else:
+            return Response({"message": "Error while creating the picklist"}, status=400)
 
 
 class ListPicklist(APIView):
@@ -194,6 +210,10 @@ class ListPicklist(APIView):
 
 
 class AssignPicklist(APIView):
+
+    @swagger_auto_schema(
+        operation_description="Assign Picklist to the User. \n  Params: \n id: Picklist Id,\n user_id: User Id of the Assignee",
+        request_body=AssignPicklistSerializer, responses={201: AssignPicklistResponseSerializer, 400: "string"})
     def post(self, request):
         picklist_id = request.data['id']
         picklist = Picklist.objects.get(id=picklist_id)
@@ -204,8 +224,12 @@ class AssignPicklist(APIView):
             'user_id': user_id,
             'picklist_id': picklist_id
         }
-        picklist_assignee = PicklistAssignee.objects.create(**data)
-        return Response({"message": "Picklist assigned successfully", data: picklist_assignee}, status=201)
+        serializer = PicklistAssigneeSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Picklist Assigned Successfully", "data": serializer.data}, status=201)
+
+        return Response("Error while assigning the picklist", status=400)
 
 
 class PicklistItemCollectView(APIView):

@@ -56,3 +56,24 @@ class PicklistListSerializer(serializers.Serializer):
     packed_by = serializers.CharField(max_length=200)
     packed_quantity = serializers.IntegerField()
     created_at = serializers.DateTimeField()
+
+
+class CreatePicklistSerializer(serializers.Serializer):
+    portals = serializers.CharField()
+    wid = serializers.IntegerField()
+    quantity = serializers.IntegerField()
+
+
+class CreatePicklistResponseSerializer(serializers.Serializer):
+    message = serializers.CharField
+    data = PicklistSerializer()
+
+
+class AssignPicklistSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    user_id = serializers.IntegerField()
+
+
+class AssignPicklistResponseSerializer(serializers.Serializer):
+    message = serializers.CharField()
+    data = PicklistAssigneeSerializer()
