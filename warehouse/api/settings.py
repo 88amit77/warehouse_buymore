@@ -109,3 +109,8 @@ CRONJOBS = [
     ('* * * * *', '.picklist.cron.generate_picklist', '>> /home/pace/Documents/python/Buymore 2.0/Warehouse/file.log'),
 ]
 
+
+# Dropbox storage
+DEFAULT_FILE_STORAGE = 'storages.backends.dropbox.DropBoxStorage'
+DROPBOX_OAUTH2_TOKEN = 'd7ElXR2Sr-AAAAAAAAAAC2HC0qc45ss1TYhRYB4Jy6__NJU1jjGiffP7LlP_2rrf'
+DROPBOX_ROOT_PATH = '/buymore2'

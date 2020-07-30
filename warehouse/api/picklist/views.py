@@ -166,7 +166,7 @@ class ListPicklist(APIView):
             page_size = request.query_params['page_size']
         else:
             page_size = 20
-        picklists_data = dict(requests.get('http://localhost:8005/warehouse/picklist/?page=' + str(page) + '&page_size='+ str(page_size)).json())
+        picklists_data = dict(requests.get('http://localhost/warehouse/picklist/?page=' + str(page) + '&page_size='+ str(page_size)).json())
 
         picklists = picklists_data['results']
         for picklist in picklists:
@@ -401,3 +401,69 @@ class DownloadPicklist(APIView):
         return {
             'link': link
         }
+
+
+class ExternalPicklistCreate(APIView):
+    def post(self, request):
+        post = request.data
+        picklist_data = {
+            'picklist_id': post['picklist_id'],
+            'total_orders': post['quantity'],
+            'status': 1,
+            'type': post['type'],
+            'warehouse_id': post['warehouse_id'],
+            'created_at': datetime.now(),
+        }
+        picklist_serializer = PicklistSerializer(data=picklist_data)
+        if picklist_serializer.is_valid():
+            picklist = picklist_serializer.save()
+            if picklist is not None:
+                assignee_data = {
+                    'picklist_id': picklist['id'],
+                    'user_id': post['assigned_to'],
+                    'created_at': datetime.now(),
+                    'completed_at': datetime.now()
+                }
+                assignee_serializer = PicklistAssigneeSerializer(data=assignee_data)
+                if assignee_serializer.is_valid():
+                    assignee = assignee_serializer.save()
+                else:
+                    return Response({
+                        'status': False,
+                        'message': 'Assignee creation failed'
+                    })
+                process_data = {
+                    'user_id': post['user_id'],
+                    'picklist_id': picklist['id'],
+                    'picklist_file': post['picklist_file'],
+                    'start_at': datetime.now(),
+                    'status': 0
+                }
+                process_serializer = PicklistProcessingMonitorSerializer(data=process_data)
+                if process_serializer.is_valid():
+                    process = process_serializer.save()
+                    if process is not None:
+                        return Response({
+                            'status': True,
+                            'message': 'Picklist created successfully'
+                        })
+                    else:
+                        return Response({
+                            'status': False,
+                            'message': 'Picklist file upload failed'
+                        })
+                else:
+                    return Response({
+                        'status': False,
+                        'message': 'Picklist file upload failed'
+                    })
+            else:
+                return Response({
+                    'status': False,
+                    'message': 'Picklist creation failed'
+                })
+        else:
+            return Response({
+                'status': False,
+                'message': 'Picklist creation failed'
+            })

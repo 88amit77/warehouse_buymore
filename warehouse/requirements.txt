@@ -7,4 +7,5 @@ requests
 drf-yasg
 django-cors-headers
 reportlab
+django-storages
 dropbox

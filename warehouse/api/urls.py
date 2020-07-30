@@ -37,6 +37,7 @@ from .picklist.views import (
     Status,
     ProductCondition,
     BarcodeGenerator,
+    ExternalPicklistCreate,
     DownloadPicklist
 )
 from drf_yasg.views import get_schema_view
@@ -74,6 +75,7 @@ urlpatterns = [
     path("warehouse/state/", WarehouseStateFilterView.as_view(), name='state'),
     path("warehouse/gst_number/", WarehouseGstFilterView.as_view(), name='gst_number'),
     path('warehouse/create_picklist/', CreatePicklist.as_view(), name='create_picklist'),
+    path('warehouse/create_external_picklist/', ExternalPicklistCreate.as_view(), name='create_external_picklist'),
     path('warehouse/download_picklist/', DownloadPicklist.as_view(), name='download_picklist'),
     path('warehouse/list_picklist/', ListPicklist.as_view(), name='list_picklist'),
     path('warehouse/assign_picklist/', AssignPicklist.as_view(), name='assign_picklist'),
