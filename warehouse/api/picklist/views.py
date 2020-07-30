@@ -406,20 +406,25 @@ class DownloadPicklist(APIView):
 class ExternalPicklistCreate(APIView):
     def post(self, request):
         post = request.data
+        if post['type'] == 'Smart':
+            portals = [2]
+        else:
+            portals = [1]
         picklist_data = {
             'picklist_id': post['picklist_id'],
+            'quantity': post['quantity'],
             'total_orders': post['quantity'],
-            'status': 1,
+            'status': 'In Process',
             'type': post['type'],
             'warehouse_id': post['warehouse_id'],
-            'created_at': datetime.now(),
+            'portals': portals
         }
         picklist_serializer = PicklistSerializer(data=picklist_data)
         if picklist_serializer.is_valid():
             picklist = picklist_serializer.save()
             if picklist is not None:
                 assignee_data = {
-                    'picklist_id': picklist['id'],
+                    'picklist_id': picklist.id,
                     'user_id': post['assigned_to'],
                     'created_at': datetime.now(),
                     'completed_at': datetime.now()
@@ -434,7 +439,7 @@ class ExternalPicklistCreate(APIView):
                     })
                 process_data = {
                     'user_id': post['user_id'],
-                    'picklist_id': picklist['id'],
+                    'picklist_id': picklist.id,
                     'picklist_file': post['picklist_file'],
                     'start_at': datetime.now(),
                     'status': 0
@@ -465,5 +470,6 @@ class ExternalPicklistCreate(APIView):
         else:
             return Response({
                 'status': False,
-                'message': 'Picklist creation failed'
+                'message': 'Picklist creation failed verification',
+                'error': picklist_serializer.errors
             })
