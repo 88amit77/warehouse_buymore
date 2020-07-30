@@ -15,7 +15,7 @@ from .warehouse.views import (
     WarehouseStateFilterView,
     WarehouseGstFilterView,
     WarehouseSelectView,
-    GetDropboxFile
+    GetExportFile
 )
 from .picklist.views import (
     PicklistView,
@@ -36,7 +36,8 @@ from .picklist.views import (
     DimensionCorrectness,
     Status,
     ProductCondition,
-    BarcodeGenerator
+    BarcodeGenerator,
+    DownloadPicklist
 )
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
@@ -73,6 +74,7 @@ urlpatterns = [
     path("warehouse/state/", WarehouseStateFilterView.as_view(), name='state'),
     path("warehouse/gst_number/", WarehouseGstFilterView.as_view(), name='gst_number'),
     path('warehouse/create_picklist/', CreatePicklist.as_view(), name='create_picklist'),
+    path('warehouse/download_picklist/', DownloadPicklist.as_view(), name='download_picklist'),
     path('warehouse/list_picklist/', ListPicklist.as_view(), name='list_picklist'),
     path('warehouse/assign_picklist/', AssignPicklist.as_view(), name='assign_picklist'),
     path('warehouse/picklistitem_collect/', PicklistItemCollectView.as_view(), name='picklistitem_collect'),
@@ -84,7 +86,7 @@ urlpatterns = [
     path('warehouse/image_correctness/', ImageCorrectness.as_view(), name='image_correctness'),
     path('warehouse/product_condition/', ProductCondition.as_view(), name='product_condition'),
     path('warehouse/get_barcode/', BarcodeGenerator.as_view(), name='get_barcode'),
-    path('warehouse/get_temp_link/', GetDropboxFile.as_view(), name='get_temp_link'),
+    path('warehouse/get_export_file/', GetExportFile.as_view(), name='get_temp_link'),
     path('warehouse/status/', Status.as_view(), name='status'),
     path("warehouse/docs/", schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 ]

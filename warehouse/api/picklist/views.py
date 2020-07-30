@@ -35,7 +35,7 @@ from reportlab.graphics.barcode import createBarcodeDrawing
 from reportlab.graphics.shapes import Drawing
 import psycopg2
 from drf_yasg.utils import swagger_auto_schema
-import json
+import dropbox
 
 
 conn_orders = psycopg2.connect(database="orders", user="postgres", password="buymore2",
@@ -383,8 +383,21 @@ class Status(APIView):
 
 
 class BarcodeGenerator(APIView):
+    @swagger_auto_schema(operation_description="Get barcode image code for the generated picklist id")
     def get(self, request):
         code = request.data['barcode']
         barcode = get_barcode(value=code, width=600)
         databar = b64encode(renderPM.drawToString(barcode, fmt='JPEG'))
         return Response({'barfile': databar})
+
+
+class DownloadPicklist(APIView):
+    def get(self, request):
+        picklist_id = request.query_params['picklist_id']
+        file_path = '/buymore2/picklist/' + picklist_id + '.pdf'
+        access_token = 'd7ElXR2Sr-AAAAAAAAAAC2HC0qc45ss1TYhRYB4Jy6__NJU1jjGiffP7LlP_2rrf'
+        dbx = dropbox.Dropbox(access_token)
+        link = dbx.files_get_temporary_link(file_path).link
+        return {
+            'link': link
+        }

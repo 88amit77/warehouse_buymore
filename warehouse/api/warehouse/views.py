@@ -287,10 +287,10 @@ class WarehouseSelectView(APIView):
         return Response(result)
 
 
-class GetDropboxFile(APIView):
+class GetExportFile(APIView):
     def get(self, request):
         id = request.data['id']
-        export_data = dict(requests.get('http://13.232.166.20/create_export/'+ str(id) +'/').json())
+        export_data = dict(requests.get('http://13.232.166.20/user/create_export/'+ str(id) +'/').json())
 
         folder_url = export_data['exfile_url']
         folder_url_created = export_data['exfile_url_time']
@@ -310,5 +310,5 @@ class GetDropboxFile(APIView):
             'exfile_url': link,
             'exfile_url_time': datetime.now()
         }
-        requests.patch('http://13.232.166.20/create_export/'+ str(id) +'/', data=request_data).json()
+        requests.patch('http://13.232.166.20/user/create_export/'+ str(id) +'/', data=request_data).json()
         return Response({'link': link})

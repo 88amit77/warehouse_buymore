@@ -77,3 +77,11 @@ class AssignPicklistSerializer(serializers.Serializer):
 class AssignPicklistResponseSerializer(serializers.Serializer):
     message = serializers.CharField()
     data = PicklistAssigneeSerializer()
+
+
+class BarcodeRequestSerializer(serializers.Serializer):
+    barcode = serializers.CharField()
+
+
+class TempLinkRequestSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
