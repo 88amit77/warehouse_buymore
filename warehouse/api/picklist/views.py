@@ -485,7 +485,7 @@ class ExternalPicklistCreate(APIView):
 
 class PicklistDetailView(APIView):
     def get(self, request):
-        picklist_id = request.query_params['id']
+        id = request.query_params['id']
         picklist = Picklist.objects.get(id=id)
         picklist_data = {
           'picklist_id': picklist.id,

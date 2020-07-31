@@ -3,7 +3,7 @@ version: '2'
 services:
   warehouse_web:
     build: ./warehouse
-    command: bash -c "cd warehouse && gunicorn api.wsgi --bind 0.0.0.0:80 --reload"
+    command: bash -c "python warehouse/manage.py runserver 0.0.0.0:80"
     volumes:
       - .:/code
     ports:
