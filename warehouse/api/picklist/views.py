@@ -243,7 +243,15 @@ class PicklistItemCollectView(APIView):
         picklist_item.remarks = remarks
         if not found:
             fnsku = request.data['fnsku']
-            product_id = 1
+            cur_products.execute("SELECT product_id from master_masterproduct where buymore_sku = '" + fnsku + "'")
+            alt_product = cur_products.fetchone()
+            if alt_product is not None:
+                product_id = alt_product[0]
+            else:
+                return Response({
+                    'status': False,
+                    'message': 'Alternate Product does not exist'
+                })
             picklist_item_alternate_data = {
                 'picklist_item_id': picklist_item_id,
                 'product_id': product_id
@@ -473,3 +481,64 @@ class ExternalPicklistCreate(APIView):
                 'message': 'Picklist creation failed verification',
                 'error': picklist_serializer.errors
             })
+
+
+class PicklistDetailView(APIView):
+    def get(self, request):
+        picklist_id = request.query_params['id']
+        picklist = Picklist.objects.get(id=id)
+        picklist_data = {
+          'picklist_id': picklist.id,
+          'total_orders': picklist.total_orders,
+          'shipout_time': picklist.shipout_time,
+          'assigned_to': picklist.assigned_to,
+          'status': picklist.status,
+          'created_at': picklist.created_at
+        }
+        picklist_items_data = PicklistItems.objects.filter(picklist_id=id)
+        picklist_items = []
+        for item_data in picklist_items_data:
+            order_query = "Select d.bin_id, n.product_id, n.buymore_sku, n.portal_sku, n.portal_id, n.qty " \
+                          "from api_neworder n " \
+                          "inner join api_dispatchdetails d on n.dd_id =d.dd_id_id " \
+                          "where dd_id=" + str(item_data.portal_new_order_id)
+            cur_orders.execute(order_query)
+            order = cur_orders.fetchone()
+            if order is not None:
+                master_product_query = "SELECT mp.product_name, fp.flipkart_listing_id " \
+                                       "from master_masterproduct mp " \
+                                       "left join flipkart_flipkartproducts fp on mp.product_id = fp.product_id " \
+                                       "where product_id = " + str(order[1])
+                cur_products.execute(master_product_query)
+                master_product = cur_products.fetchone()
+                picklist_alternate_product = PicklistItemAlternate.objects.get(picklist_item_id=item_data.id)
+                alternate_product_title = ''
+                if item_data.found == 'Not Found' and picklist_alternate_product is not None:
+                    cur_products.execute('select product_name from master_masterproduct where product_id = ' + str(picklist_alternate_product.product_id))
+                    alt_product = cur_products.fetchone()
+                    if alt_product is not None:
+                        alternate_product_title = alt_product[0]
+
+                total_completed = 0
+                total_cancelled = 0
+                if item_data.status == 'Collected':
+                    total_completed = order[5]
+
+                if master_product is not None:
+                    picklist_items.append({
+                        'bin': order[0],
+                        'sku': order[3],
+                        'fnsku': order[2],
+                        'listing_id': master_product[1],
+                        'portal': order[4],
+                        'title': master_product[0],
+                        'total_items': order[5],
+                        'remarks': item_data.remarks,
+                        'alternate_product_title': alternate_product_title,
+                        'total_completed': total_completed,
+                        'total_cancelled': total_cancelled
+                    })
+        return Response({
+            'picklist_data': picklist_data,
+            'picklist_items': picklist_items
+        })

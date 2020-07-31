@@ -38,6 +38,7 @@ from .picklist.views import (
     ProductCondition,
     BarcodeGenerator,
     ExternalPicklistCreate,
+    PicklistDetailView,
     DownloadPicklist
 )
 from drf_yasg.views import get_schema_view
@@ -78,6 +79,7 @@ urlpatterns = [
     path('warehouse/create_external_picklist/', ExternalPicklistCreate.as_view(), name='create_external_picklist'),
     path('warehouse/download_picklist/', DownloadPicklist.as_view(), name='download_picklist'),
     path('warehouse/list_picklist/', ListPicklist.as_view(), name='list_picklist'),
+    path('warehouse/picklist_detail/', PicklistDetailView.as_view(), name='picklist_detail'),
     path('warehouse/assign_picklist/', AssignPicklist.as_view(), name='assign_picklist'),
     path('warehouse/picklistitem_collect/', PicklistItemCollectView.as_view(), name='picklistitem_collect'),
     path('warehouse/picklist_check/', PicklistCheckView.as_view(), name='picklist_check'),
