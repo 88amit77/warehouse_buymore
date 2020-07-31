@@ -503,7 +503,7 @@ class PicklistDetailView(APIView):
         picklist_items_data = PicklistItems.objects.filter(picklist_id=id)
         picklist_items = []
         for item_data in picklist_items_data:
-            order_query = "Select d.bin_id, n.product_id, n.buymore_sku, n.portal_sku, n.portal_id, n.qty " \
+            order_query = "Select d.bin_Id, n.product_id, n.buymore_sku, n.portal_sku, n.portal_id, n.qty " \
                           "from api_neworder n " \
                           "inner join api_dispatchdetails d on n.dd_id =d.dd_id_id " \
                           "where dd_id=" + str(item_data.portal_new_order_id)
