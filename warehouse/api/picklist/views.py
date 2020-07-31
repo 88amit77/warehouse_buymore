@@ -487,11 +487,16 @@ class PicklistDetailView(APIView):
     def get(self, request):
         id = request.query_params['id']
         picklist = Picklist.objects.get(id=id)
+        assigned_to = ''
+        if picklist.status in ['Assigned', 'Completed']:
+            assignee = PicklistAssignee.objects.get(picklist_id=id)
+            if assignee is not None:
+                assigned_to = assignee.user_id
         picklist_data = {
           'picklist_id': picklist.id,
           'total_orders': picklist.total_orders,
           'shipout_time': picklist.shipout_time,
-          'assigned_to': picklist.assigned_to,
+          'assigned_to': assigned_to,
           'status': picklist.status,
           'created_at': picklist.created_at
         }
