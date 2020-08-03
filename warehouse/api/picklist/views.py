@@ -170,12 +170,19 @@ class ListPicklist(APIView):
         picklists_data = dict(requests.get('http://localhost/warehouse/picklist/?page=' + str(page) + '&page_size='+ str(page_size)).json())
 
         picklists = picklists_data['results']
+
+        conn_users = psycopg2.connect(database="users", user="postgres", password="buymore2",
+                                      host="buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com", port="5432")
+        cur_users = conn_users.cursor()
         for picklist in picklists:
             assignee_data = PicklistAssignee.objects.filter(picklist_id=picklist['id']).first()
+            assignee_user = ''
             if assignee_data is not None:
                 assignee = assignee_data.user_id
-            else:
-                assignee = None
+                cur_users.execute('Select username from auth_user where id = ' + str(assignee))
+                user_assignee = cur_users.fetchone()
+                if user_assignee is not None:
+                    assignee_user = user_assignee[0]
 
             data.append({
                 "id": picklist['id'],
@@ -184,11 +191,12 @@ class ListPicklist(APIView):
                 "shipout_time": picklist['shipout_time'],
                 "status": picklist['status'],
                 "type": picklist['type'],
-                "assigned_to": assignee,
+                "assigned_to": assignee_user,
                 "packed_by": "",
                 "packed_quantity": 0,
                 "created_at": picklist['created_at']
             })
+        conn_users.close()
         next_link = None
         prev_link = None
         if picklists_data['next'] is not None:
@@ -500,6 +508,7 @@ class PicklistDetailView(APIView):
                 user_assignee = cur_users.fetchone()
                 if user_assignee is not None:
                     assigned_to_user = user_assignee[0]
+                conn_users.close()
         picklist_data = {
           'picklist_id': picklist.id,
           'total_orders': picklist.total_orders,
