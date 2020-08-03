@@ -488,16 +488,23 @@ class PicklistDetailView(APIView):
     def get(self, request):
         id = request.query_params['id']
         picklist = Picklist.objects.get(id=id)
-        assigned_to = ''
+        assigned_to_user = ''
         if picklist.status in ['Assigned', 'Completed']:
             assignee = PicklistAssignee.objects.get(picklist_id=id)
             if assignee is not None:
                 assigned_to = assignee.user_id
+                conn_users = psycopg2.connect(database="users", user="postgres", password="buymore2",
+                                               host="buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com", port="5432")
+                cur_users = conn_users.cursor()
+                cur_users.execute('Select username from auth_user where id = ' + str(assigned_to))
+                user_assignee = cur_users.fetchone()
+                if user_assignee is not None:
+                    assigned_to_user = user_assignee[0]
         picklist_data = {
           'picklist_id': picklist.id,
           'total_orders': picklist.total_orders,
           'shipout_time': picklist.shipout_time,
-          'assigned_to': assigned_to,
+          'assigned_to': assigned_to_user,
           'status': picklist.status,
           'created_at': picklist.created_at
         }
