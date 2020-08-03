@@ -19,6 +19,7 @@ from .warehouse.views import (
 )
 from .picklist.views import (
     PicklistView,
+    PicklistListView,
     PicklistItemsView,
     PicklistItemAlternateView,
     PicklistAssigneeView,
@@ -51,6 +52,7 @@ router.register(r'warehouse/warehouse', WarehouseDetailsViewSet, basename='wareh
 router.register(r'warehouse/warehouses', WarehouseQueryViewSet, basename='warehouses')
 
 router.register(r'warehouse/picklist', PicklistView)
+router.register(r'warehouse/picklistlist', PicklistListView)
 router.register(r'warehouse/picklist_items', PicklistItemsView)
 router.register(r'warehouse/picklist_item_alternative', PicklistItemAlternateView)
 router.register(r'warehouse/picklist_item_assignee', PicklistAssigneeView)

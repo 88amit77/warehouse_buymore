@@ -72,6 +72,17 @@ class PicklistView(viewsets.ModelViewSet):
     pagination_class = CustomPageNumberPagination
 
 
+class PicklistListView(viewsets.ModelViewSet):
+    # queryset = Picklist.objects.all()
+    serializer_class = PicklistSerializer
+    pagination_class = CustomPageNumberPagination
+
+    def get_queryset(self):
+        qs = Picklist.objects.all()
+
+        return qs.order_by('-id')
+
+
 class PicklistItemsView(viewsets.ModelViewSet):
     queryset = PicklistItems.objects.all()
     serializer_class = PicklistItemsSerializer
@@ -167,7 +178,7 @@ class ListPicklist(APIView):
             page_size = request.query_params['page_size']
         else:
             page_size = 20
-        picklists_data = dict(requests.get('http://localhost/warehouse/picklist/?page=' + str(page) + '&page_size='+ str(page_size)).json())
+        picklists_data = dict(requests.get('http://localhost/warehouse/picklistlist/?page=' + str(page) + '&page_size='+ str(page_size)).json())
 
         picklists = picklists_data['results']
 
