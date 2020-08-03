@@ -44,6 +44,7 @@ cur_orders = conn_orders.cursor()
 
 conn_products = psycopg2.connect(database="products", user="postgres", password="buymore2",
                                      host="buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com", port="5432")
+
 cur_products = conn_products.cursor()
 
 
@@ -503,26 +504,30 @@ class PicklistDetailView(APIView):
         picklist_items_data = PicklistItems.objects.filter(picklist_id=id)
         picklist_items = []
         for item_data in picklist_items_data:
-            order_query = "Select \"d.bin_Id\", n.product_id, n.buymore_sku, n.portal_sku, n.portal_id, n.qty " \
+            order_query = "Select \"bin_Id\", n.product_id, n.buymore_sku, n.portal_sku, n.portal_id, n.qty " \
                           "from api_neworder n " \
                           "inner join api_dispatchdetails d on n.dd_id =d.dd_id_id " \
-                          "where dd_id=" + str(item_data.portal_new_order_id)
+                          "where n.dd_id=" + str(item_data.portal_new_order_id)
+            print(order_query)
             cur_orders.execute(order_query)
             order = cur_orders.fetchone()
             if order is not None:
                 master_product_query = "SELECT mp.product_name, fp.flipkart_listing_id " \
                                        "from master_masterproduct mp " \
                                        "left join flipkart_flipkartproducts fp on mp.product_id = fp.product_id " \
-                                       "where product_id = " + str(order[1])
+                                       "where mp.product_id = " + str(order[1])
                 cur_products.execute(master_product_query)
                 master_product = cur_products.fetchone()
-                picklist_alternate_product = PicklistItemAlternate.objects.get(picklist_item_id=item_data.id)
-                alternate_product_title = ''
-                if item_data.found == 'Not Found' and picklist_alternate_product is not None:
-                    cur_products.execute('select product_name from master_masterproduct where product_id = ' + str(picklist_alternate_product.product_id))
-                    alt_product = cur_products.fetchone()
-                    if alt_product is not None:
-                        alternate_product_title = alt_product[0]
+                try:
+                    picklist_alternate_product = PicklistItemAlternate.objects.get(picklist_item_id=item_data.id)
+                    if item_data.found == 'Not Found' and picklist_alternate_product is not None:
+                        cur_products.execute('select product_name from master_masterproduct where product_id = ' + str(
+                            picklist_alternate_product.product_id))
+                        alt_product = cur_products.fetchone()
+                        if alt_product is not None:
+                            alternate_product_title = alt_product[0]
+                except PicklistItemAlternate.DoesNotExist:
+                    alternate_product_title = ''
 
                 total_completed = 0
                 total_cancelled = 0
