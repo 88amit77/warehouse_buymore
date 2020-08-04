@@ -22,3 +22,15 @@ class WarehouseDetails(models.Model):
     pincode = models.CharField(max_length=10)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class VendorStorageFeesException(models.Model):
+    """
+    For vendor storage fees exceptions
+    """
+    storagefeeexception_id = models.AutoField(primary_key=True)
+    vendor_id = models.PositiveSmallIntegerField()
+    Shorttermfee = models.FloatField()
+    longtermfee = models.FloatField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
