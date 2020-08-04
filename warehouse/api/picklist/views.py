@@ -521,7 +521,8 @@ class PicklistDetailView(APIView):
                     assigned_to_user = user_assignee[0]
                 conn_users.close()
         picklist_data = {
-          'picklist_id': picklist.id,
+          'id': picklist.id,
+          'picklist_id': picklist.picklist_id,
           'total_orders': picklist.total_orders,
           'shipout_time': picklist.shipout_time,
           'assigned_to': assigned_to_user,
@@ -563,6 +564,7 @@ class PicklistDetailView(APIView):
 
                 if master_product is not None:
                     picklist_items.append({
+                        'picklist_item_id': item_data.id,
                         'bin': order[0],
                         'sku': order[3],
                         'fnsku': order[2],
@@ -579,3 +581,38 @@ class PicklistDetailView(APIView):
             'picklist_data': picklist_data,
             'picklist_items': picklist_items
         })
+
+
+class OrderCount(APIView):
+    def post(self, request):
+        conn_picklist = psycopg2.connect(database="warehouse", user="postgres", password="buymore2",
+                                         host="buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com", port="5432")
+        conn_orders = psycopg2.connect(database="orders", user="postgres", password="buymore2",
+                                       host="buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com", port="5432")
+        conn_products = psycopg2.connect(database="products", user="postgres", password="buymore2",
+                                         host="buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com", port="5432")
+
+        cur_picklist = conn_picklist.cursor()
+        cur_orders = conn_orders.cursor()
+        cur_products = conn_products.cursor()
+
+        portals = request.data['portals']
+        warehouse = request.data['wid']
+
+
+        query = 'Select count(*) as count from api_neworder  inner join api_dispatchdetails ' \
+                    'on api_neworder.dd_id = api_dispatchdetails.dipatch_details_id  ' \
+                    'where api_dispatchdetails.is_mark_placed=TRUE and api_dispatchdetails.packing_status=FALSE and ' \
+                    'api_dispatchdetails.is_dispatch=FALSE and ' \
+                    'api_neworder.portal_id IN (' + str(portals) + ') and api_neworder.warehouse_id = ' + str(warehouse)
+
+        cur_orders.execute(query)
+        quantity = cur_orders.fetchone()
+        if quantity is not None:
+            quantity_order = quantity[0]
+        else:
+            quantity_order = 0
+        return Response({"quantity": quantity})
+
+
+
