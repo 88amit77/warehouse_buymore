@@ -38,6 +38,7 @@ from drf_yasg.utils import swagger_auto_schema
 import dropbox
 
 
+
 conn_orders = psycopg2.connect(database="orders", user="postgres", password="buymore2",
                                      host="buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com", port="5432")
 cur_orders = conn_orders.cursor()
@@ -46,6 +47,8 @@ conn_products = psycopg2.connect(database="products", user="postgres", password=
                                      host="buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com", port="5432")
 
 cur_products = conn_products.cursor()
+access_token = 'd7ElXR2Sr-AAAAAAAAAAC2HC0qc45ss1TYhRYB4Jy6__NJU1jjGiffP7LlP_2rrf'
+dbx = dropbox.Dropbox(access_token)
 
 
 def get_barcode(value, width, barWidth = 0.05 * units.inch, fontSize = 30, humanReadable = True):
@@ -330,7 +333,7 @@ def get_order_data(order_id):
     product_data = cur_products.fetchone()
 
     return {
-        "product_image": product_data[5],
+        "product_image_url": product_data[5],
         "title": product_data[0],
         "sku": sku,
         "fnsku": fnsku,
@@ -351,13 +354,13 @@ class PicklistProcessingFnskuCheck(APIView):
         picklist_item = PicklistItems.objects.get(picklist_id=id, portal_new_order_id=order_id)
         if bool(picklist_item):
             picklist_item_id = picklist_item.id
-            print(picklist_item_id)
             picklist_item_processing = PicklistItemProcessing.objects.filter(picklist_item_id=picklist_item_id).first()
             if picklist_item_processing is not None:
                 return Response({"status": False, "message": "Item is already processed"})
             else:
                 order_data = get_order_data(order_id)
-                return Response(order_data)
+                order_data['picklist_item_id'] = picklist_item_id
+                return Response({'status': True, 'data': order_data})
         else:
             return Response({"status": False, "message": "Picklist item does not exist"})
 
@@ -370,7 +373,7 @@ class SizeCorrectness(APIView):
         })
 
 
-class LabelCorrectness(APIView):
+class TitleCorrectness(APIView):
     def get(self, request):
         return Response({
             "True": "Yes",
@@ -423,8 +426,6 @@ class DownloadPicklist(APIView):
     def get(self, request):
         picklist_id = request.query_params['picklist_id']
         file_path = '/buymore2/picklist/' + picklist_id + '.pdf'
-        access_token = 'd7ElXR2Sr-AAAAAAAAAAC2HC0qc45ss1TYhRYB4Jy6__NJU1jjGiffP7LlP_2rrf'
-        dbx = dropbox.Dropbox(access_token)
         link = dbx.files_get_temporary_link(file_path).link
         return {
             'link': link
@@ -615,4 +616,25 @@ class OrderCount(APIView):
         return Response({"quantity": quantity})
 
 
-
+class PicklistItemProcess(APIView):
+    def post(self, request):
+        data = request.data
+        item_processing_serializer = PicklistItemProcessingSerializer(data=data)
+        if item_processing_serializer.is_valid():
+            item_processing_serializer.save()
+            if data['status']:
+                picklist_item = PicklistItems.objects.get(id=data['picklist_item_id'])
+                order_id = picklist_item.portal_new_order_id
+                cur_orders.execute('select order_id, order_item_id from api_neworder where dd_id = ' + str(order_id))
+                order = cur_orders.fetchone()
+                if order is not None:
+                    file_path = '/buymore2/orders/invoices/' + str(order[0]) + '#' + str(order[1]) + '.pdf'
+                    invoice_file = dbx.files_get_temporary_link(file_path).link
+                    return Response({'status': True, 'invoice': True, 'invoice_file': invoice_file})
+                else:
+                    return Response({'status': False, 'invoice': False, 'message': 'Invoice not found'})
+            else:
+                return Response({'status': True, 'invoice': False, 'invoice_file': ''})
+                pass
+        else:
+            return Response({'status': False, 'errors': item_processing_serializer.errors})
