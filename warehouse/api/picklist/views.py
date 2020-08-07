@@ -296,8 +296,9 @@ class PicklistItemCollectView(APIView):
 class PicklistCheckView(APIView):
     def get(self, request):
         picklist_id = request.query_params['picklist_id']
-        picklist = Picklist.objects.get(picklist_id=picklist_id)
-        if bool(picklist):
+        try:
+            picklist = Picklist.objects.get(picklist_id=picklist_id)
+
             id = picklist.id
             picklist_status = picklist.status
             total = PicklistItems.objects.filter(picklist_id=id).filter(~Q(status='Not Found')).count()
@@ -310,7 +311,7 @@ class PicklistCheckView(APIView):
                 return Response({"status": True, "message": "Picklist found"})
             else:
                 return Response({"status": False, "message": "Picklist is in process"})
-        else:
+        except Picklist.DoesNotExist as e:
             return Response({"status": False, "message": "Picklist does not exist"})
 
 
