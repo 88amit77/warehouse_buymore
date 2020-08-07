@@ -432,6 +432,24 @@ class DownloadPicklist(APIView):
         }
 
 
+class ExternalPicklistProcess(APIView):
+    def post(self, request):
+        picklist_id = request.data['id']
+        user_id = request.data['user_id']
+        items_processed = request.data['quantity']
+        picklist_processing_monitor = PicklistProcessingMonitor.objects.get(picklist_id=picklist_id)
+        if picklist_processing_monitor is not None:
+            picklist_processing_monitor.start_at = datetime.now()
+            picklist_processing_monitor.user_id = user_id
+            picklist_processing_monitor.items_processed = items_processed
+            picklist_processing_monitor.end_at = datetime.now()
+            picklist_processing_monitor.status = True
+            picklist_processing_monitor.save()
+            return Response({'status': True, 'message': 'Picklist processed successfully'})
+        else:
+            return Response({'status': False})
+
+
 class ExternalPicklistCreate(APIView):
     def post(self, request):
         post = request.data
@@ -619,9 +637,27 @@ class OrderCount(APIView):
 class PicklistItemProcess(APIView):
     def post(self, request):
         data = request.data
+        user_id = data['user_id']
         item_processing_serializer = PicklistItemProcessingSerializer(data=data)
         if item_processing_serializer.is_valid():
             item_processing_serializer.save()
+            picklist_item = PicklistItems.objects.get(picklist_item_id=data['picklist_item_id'])
+            picklist_id = picklist_item.picklist_id
+            picklist_processing_monitor = PicklistProcessingMonitor.objects.get(picklist_id=picklist_id)
+            total = PicklistItems.objects.filter(picklist_id=id).filter(~Q(status='Not Found')).count()
+            if picklist_processing_monitor is not None:
+                if picklist_processing_monitor.start_at is None:
+                    picklist_processing_monitor.start_at = datetime.now()
+                    picklist_processing_monitor.user_id = user_id
+                    picklist_processing_monitor.items_processed = 1
+                    picklist_processing_monitor.status = False
+                else:
+                    picklist_processing_monitor.items_processed += 1
+                if total == picklist_processing_monitor.items_processed:
+                    picklist_processing_monitor.end_at = datetime.now()
+                    picklist_processing_monitor.status = True
+                picklist_processing_monitor.save()
+
             if data['status']:
                 picklist_item = PicklistItems.objects.get(id=data['picklist_item_id'])
                 order_id = picklist_item.portal_new_order_id

@@ -40,6 +40,7 @@ from .picklist.views import (
     ProductCondition,
     BarcodeGenerator,
     ExternalPicklistCreate,
+    ExternalPicklistProcess,
     PicklistDetailView,
     OrderCount,
     DownloadPicklist
@@ -82,6 +83,7 @@ urlpatterns = [
     path('warehouse/create_picklist/', CreatePicklist.as_view(), name='create_picklist'),
     path('warehouse/order_count/', OrderCount.as_view(), name='order_count'),
     path('warehouse/create_external_picklist/', ExternalPicklistCreate.as_view(), name='create_external_picklist'),
+    path('warehouse/process_external_picklist/', ExternalPicklistProcess.as_view(), name='process_external_picklist'),
     path('warehouse/download_picklist/', DownloadPicklist.as_view(), name='download_picklist'),
     path('warehouse/list_picklist/', ListPicklist.as_view(), name='list_picklist'),
     path('warehouse/picklist_detail/', PicklistDetailView.as_view(), name='picklist_detail'),
