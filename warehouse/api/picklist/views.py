@@ -640,11 +640,11 @@ class PicklistItemProcess(APIView):
     def post(self, request):
         data = request.data
         user_id = data['user_id']
-        picklist_item_id = data.pop('picklist_item_id')
+
         item_processing_serializer = PicklistItemProcessingSerializer(data=data)
         if item_processing_serializer.is_valid():
             item_processing_serializer.save()
-            picklist_item = PicklistItems.objects.get(picklist_item_id=picklist_item_id)
+            picklist_item = PicklistItems.objects.get(id=data['picklist_item_id'])
             picklist_id = picklist_item.picklist_id
             picklist_processing_monitor = PicklistProcessingMonitor.objects.get(picklist_id=picklist_id)
             total = PicklistItems.objects.filter(picklist_id=id).filter(~Q(status='Not Found')).count()
@@ -662,7 +662,7 @@ class PicklistItemProcess(APIView):
                 picklist_processing_monitor.save()
 
             if data['status']:
-                picklist_item = PicklistItems.objects.get(id=picklist_item_id)
+                picklist_item = PicklistItems.objects.get(id=data['picklist_item_id'])
                 order_id = picklist_item.portal_new_order_id
                 cur_orders.execute('select order_id, order_item_id from api_neworder where dd_id = ' + str(order_id))
                 order = cur_orders.fetchone()
