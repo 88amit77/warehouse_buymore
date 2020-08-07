@@ -304,6 +304,8 @@ class PicklistCheckView(APIView):
             total = PicklistItems.objects.filter(picklist_id=id).filter(~Q(status='Not Found')).count()
             picklist_processing_monitor = PicklistProcessingMonitor.objects.get(picklist_id=id)
             items_processed = picklist_processing_monitor.items_processed
+            if items_processed is None:
+                items_processed = 0
             if total == items_processed:
                 return Response({"status": False, "message": "Picklist is already Processed"})
 
