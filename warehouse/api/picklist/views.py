@@ -308,7 +308,7 @@ class PicklistCheckView(APIView):
                 return Response({"status": False, "message": "Picklist is already Processed"})
 
             if picklist_status == 'Completed':
-                return Response({"status": True, "message": "Picklist found"})
+                return Response({"status": True, "total": total, "items_processed": items_processed, "message": "Picklist found"})
             else:
                 return Response({"status": False, "message": "Picklist is in process"})
         except Picklist.DoesNotExist as e:
