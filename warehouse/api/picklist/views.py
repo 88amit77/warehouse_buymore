@@ -647,7 +647,7 @@ class PicklistItemProcess(APIView):
             picklist_item = PicklistItems.objects.get(id=data['picklist_item_id'])
             picklist_id = picklist_item.picklist_id
             picklist_processing_monitor = PicklistProcessingMonitor.objects.get(picklist_id=picklist_id)
-            total = PicklistItems.objects.filter(picklist_id=id).filter(~Q(status='Not Found')).count()
+            total = PicklistItems.objects.filter(picklist_id=picklist_id).filter(~Q(status='Not Found')).count()
             if picklist_processing_monitor is not None:
                 if picklist_processing_monitor.start_at is None:
                     picklist_processing_monitor.start_at = datetime.now()
