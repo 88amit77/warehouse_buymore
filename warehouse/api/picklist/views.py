@@ -319,8 +319,7 @@ class PicklistCheckView(APIView):
 
 def get_order_by_fnsku(fnsku, picklist_id):
 
-    cur_orders.execute("Select dd_id from api_neworder no inner join api_dispatchdetails dd on no.dd_id = dd.dd_id_id "
-                       "where no.buymore_sku='" + fnsku + "' and dd.picklist_id=" + str(picklist_id))
+    cur_orders.execute("Select dd_id from api_neworder no inner join api_dispatchdetails dd on no.dd_id = dd.dd_id_id where no.buymore_sku='" + fnsku + "' and dd.picklist_id=" + str(picklist_id))
     order = cur_orders.fetchone()
 
     return order[0]
@@ -677,3 +676,25 @@ class PicklistItemProcess(APIView):
                 pass
         else:
             return Response({'status': False, 'errors': item_processing_serializer.errors})
+
+
+class BulkFoundPicklistItem(APIView):
+    def post(self, request):
+        ids = request.data['ids']
+        picklist_id = request.data['picklist_id']
+        remarks = request.data['remarks']
+        item_ids = ids.split(',')
+        try:
+            PicklistItems.objects.filter(id__in=item_ids).update(found='Found', remarks=remarks, status = 'Collected')
+            picklist = Picklist.objects.get(id=picklist_id)
+            total_orders = picklist.total_orders
+            picklist_items_count = PicklistItems.objects.filter(picklist_id=picklist_id).filter(status='Collected').count()
+            if total_orders == picklist_items_count:
+                picklist.status = 'Completed'
+            else:
+                picklist.status = 'In Process'
+            picklist.save()
+
+            return Response({'status': True, 'message': 'Records updated successfully'})
+        except:
+            return Response({'status': False, 'message': 'Picklist Items could not be updated'})
