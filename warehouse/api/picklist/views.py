@@ -445,8 +445,8 @@ class ExternalPicklistProcess(APIView):
         picklist_id = request.data['id']
         user_id = request.data['user_id']
         items_processed = request.data['quantity']
-        picklist_processing_monitor = PicklistProcessingMonitor.objects.get(picklist_id=picklist_id)
-        if picklist_processing_monitor is not None:
+        try:
+            picklist_processing_monitor = PicklistProcessingMonitor.objects.get(picklist_id=picklist_id)
             picklist_processing_monitor.start_at = datetime.now()
             picklist_processing_monitor.user_id = user_id
             picklist_processing_monitor.items_processed = items_processed
@@ -454,7 +454,7 @@ class ExternalPicklistProcess(APIView):
             picklist_processing_monitor.status = True
             picklist_processing_monitor.save()
             return Response({'status': True, 'message': 'Picklist processed successfully'})
-        else:
+        except PicklistProcessingMonitor.DoesNotExist as e:
             return Response({'status': False})
 
 
