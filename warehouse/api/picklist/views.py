@@ -190,7 +190,7 @@ class ListPicklist(APIView):
                     assignee_user = user_assignee[0]
             try:
                 picklist_processing_monitor = PicklistProcessingMonitor.objects.get(picklist_id=picklist['id'])
-                packed_quantity = picklist_processing_monitor['items_processed']
+                packed_quantity = picklist_processing_monitor.items_processed
             except PicklistProcessingMonitor.DoesNotExist:
                 packed_quantity = 0
 
