@@ -38,15 +38,6 @@ from drf_yasg.utils import swagger_auto_schema
 import dropbox
 
 
-
-conn_orders = psycopg2.connect(database="orders", user="postgres", password="buymore2",
-                                     host="buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com", port="5432")
-cur_orders = conn_orders.cursor()
-
-conn_products = psycopg2.connect(database="products", user="postgres", password="buymore2",
-                                     host="buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com", port="5432")
-
-cur_products = conn_products.cursor()
 access_token = 'd7ElXR2Sr-AAAAAAAAAAC2HC0qc45ss1TYhRYB4Jy6__NJU1jjGiffP7LlP_2rrf'
 dbx = dropbox.Dropbox(access_token)
 
@@ -257,6 +248,10 @@ class AssignPicklist(APIView):
 
 class PicklistItemCollectView(APIView):
     def post(self, request):
+        conn_products = psycopg2.connect(database="products", user="postgres", password="buymore2",
+                                         host="buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com", port="5432")
+
+        cur_products = conn_products.cursor()
         picklist_item_id = request.data['id']
         picklist_item = PicklistItems.objects.get(id=picklist_item_id)
         picklist_id = picklist_item.picklist_id
@@ -290,6 +285,7 @@ class PicklistItemCollectView(APIView):
         else:
             picklist.status = 'In Process'
         picklist.save()
+        conn_products.close()
         return Response({'message': "Picklist item status updated"})
 
 
@@ -318,14 +314,23 @@ class PicklistCheckView(APIView):
 
 
 def get_order_by_fnsku(fnsku, picklist_id):
-
+    conn_orders = psycopg2.connect(database="orders", user="postgres", password="buymore2",
+                                   host="buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com", port="5432")
+    cur_orders = conn_orders.cursor()
     cur_orders.execute("Select dd_id from api_neworder no inner join api_dispatchdetails dd on no.dd_id = dd.dd_id_id where no.buymore_sku='" + fnsku + "' and dd.picklist_id=" + str(picklist_id))
     order = cur_orders.fetchone()
-
+    conn_orders.close()
     return order[0]
 
 
 def get_order_data(order_id):
+    conn_products = psycopg2.connect(database="products", user="postgres", password="buymore2",
+                                     host="buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com", port="5432")
+
+    cur_products = conn_products.cursor()
+    conn_orders = psycopg2.connect(database="orders", user="postgres", password="buymore2",
+                                   host="buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com", port="5432")
+    cur_orders = conn_orders.cursor()
     cur_orders.execute("Select product_id, portal_sku, buymore_sku from api_neworder where dd_id=" + str(order_id))
     order = cur_orders.fetchone()
     product_id = order[0]
@@ -333,7 +338,8 @@ def get_order_data(order_id):
     fnsku = order[2]
     cur_products.execute("Select product_name, product_length, product_breath, product_width, product_weight, image_url from master_masterproduct where product_id = " + str(product_id))
     product_data = cur_products.fetchone()
-
+    conn_products.close()
+    conn_orders.close()
     return {
         "product_image_url": product_data[5],
         "title": product_data[0],
@@ -526,6 +532,13 @@ class ExternalPicklistCreate(APIView):
 
 class PicklistDetailView(APIView):
     def get(self, request):
+        conn_products = psycopg2.connect(database="products", user="postgres", password="buymore2",
+                                         host="buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com", port="5432")
+
+        cur_products = conn_products.cursor()
+        conn_orders = psycopg2.connect(database="orders", user="postgres", password="buymore2",
+                                       host="buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com", port="5432")
+        cur_orders = conn_orders.cursor()
         id = request.query_params['id']
         picklist = Picklist.objects.get(id=id)
         assigned_to_user = ''
@@ -598,6 +611,8 @@ class PicklistDetailView(APIView):
                         'total_completed': total_completed,
                         'total_cancelled': total_cancelled
                     })
+        conn_products.close()
+        conn_orders.close()
         return Response({
             'picklist_data': picklist_data,
             'picklist_items': picklist_items
@@ -606,16 +621,10 @@ class PicklistDetailView(APIView):
 
 class OrderCount(APIView):
     def post(self, request):
-        conn_picklist = psycopg2.connect(database="warehouse", user="postgres", password="buymore2",
-                                         host="buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com", port="5432")
         conn_orders = psycopg2.connect(database="orders", user="postgres", password="buymore2",
                                        host="buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com", port="5432")
-        conn_products = psycopg2.connect(database="products", user="postgres", password="buymore2",
-                                         host="buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com", port="5432")
 
-        cur_picklist = conn_picklist.cursor()
         cur_orders = conn_orders.cursor()
-        cur_products = conn_products.cursor()
 
         portals = request.data['portals']
         warehouse = request.data['wid']
@@ -633,11 +642,15 @@ class OrderCount(APIView):
             quantity_order = quantity[0]
         else:
             quantity_order = 0
+        conn_orders.close()
         return Response({"quantity": quantity})
 
 
 class PicklistItemProcess(APIView):
     def post(self, request):
+        conn_orders = psycopg2.connect(database="orders", user="postgres", password="buymore2",
+                                       host="buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com", port="5432")
+        cur_orders = conn_orders.cursor()
         data = request.data
         user_id = data['user_id']
 
@@ -669,14 +682,16 @@ class PicklistItemProcess(APIView):
                 if order is not None:
                     file_path = '/buymore2/orders/invoices/' + str(order[0]) + '#' + str(order[1]) + '.pdf'
                     invoice_file = dbx.files_get_temporary_link(file_path).link
-                    return Response({'status': True, 'invoice': True, 'invoice_file': invoice_file})
+                    resp = {'status': True, 'invoice': True, 'invoice_file': invoice_file}
                 else:
-                    return Response({'status': False, 'invoice': False, 'message': 'Invoice not found'})
+                    resp = {'status': False, 'invoice': False, 'message': 'Invoice not found'}
             else:
-                return Response({'status': True, 'invoice': False, 'invoice_file': ''})
-                pass
+                resp = {'status': True, 'invoice': False, 'invoice_file': ''}
+
         else:
-            return Response({'status': False, 'errors': item_processing_serializer.errors})
+            resp = {'status': False, 'errors': item_processing_serializer.errors}
+        conn_orders.close()
+        return Response(resp)
 
 
 class BulkFoundPicklistItem(APIView):
