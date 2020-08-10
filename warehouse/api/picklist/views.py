@@ -188,6 +188,11 @@ class ListPicklist(APIView):
                 user_assignee = cur_users.fetchone()
                 if user_assignee is not None:
                     assignee_user = user_assignee[0]
+            try:
+                picklist_processing_monitor = PicklistProcessingMonitor.objects.get(picklist_id=picklist['id'])
+                packed_quantity = picklist_processing_monitor['items_processed']
+            except PicklistProcessingMonitor.DoesNotExist:
+                packed_quantity = 0
 
             data.append({
                 "id": picklist['id'],
@@ -198,7 +203,7 @@ class ListPicklist(APIView):
                 "type": picklist['type'],
                 "assigned_to": assignee_user,
                 "packed_by": "",
-                "packed_quantity": 0,
+                "packed_quantity": packed_quantity,
                 "created_at": picklist['created_at']
             })
         conn_users.close()
