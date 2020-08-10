@@ -458,6 +458,9 @@ class ExternalPicklistProcess(APIView):
             picklist_processing_monitor.end_at = datetime.now()
             picklist_processing_monitor.status = True
             picklist_processing_monitor.save()
+            picklist = Picklist.objects.get(id=picklist_id)
+            picklist.status = 'Completed'
+            picklist.save()
             return Response({'status': True, 'message': 'Picklist processed successfully'})
         except PicklistProcessingMonitor.DoesNotExist as e:
             return Response({'status': False})
