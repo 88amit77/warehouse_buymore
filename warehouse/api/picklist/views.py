@@ -191,8 +191,16 @@ class ListPicklist(APIView):
             try:
                 picklist_processing_monitor = PicklistProcessingMonitor.objects.get(picklist_id=picklist['id'])
                 packed_quantity = picklist_processing_monitor.items_processed
+                packed_by_user = picklist_processing_monitor.user_id
+                cur_users.execute('Select username from auth_user where id = ' + str(packed_by_user))
+                user_packed = cur_users.fetchone()
+                if user_packed is not None:
+                    packed_by = user_packed[0]
+                else:
+                    packed_by = ''
             except PicklistProcessingMonitor.DoesNotExist:
                 packed_quantity = 0
+                packed_by = ''
 
             data.append({
                 "id": picklist['id'],
@@ -202,7 +210,7 @@ class ListPicklist(APIView):
                 "status": picklist['status'],
                 "type": picklist['type'],
                 "assigned_to": assignee_user,
-                "packed_by": "",
+                "packed_by": packed_by,
                 "packed_quantity": packed_quantity,
                 "created_at": picklist['created_at']
             })
@@ -722,3 +730,12 @@ class BulkFoundPicklistItem(APIView):
             return Response({'status': True, 'message': 'Records updated successfully'})
         except:
             return Response({'status': False, 'message': 'Picklist Items could not be updated'})
+
+
+# class GetActivePortalAccounts(APIView):
+#     def get(self, request):
+#         conn_orders = psycopg2.connect(database="orders", user="postgres", password="buymore2",
+#                                          host="buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com", port="5432")
+#
+#         cur_orders = conn_orders.cursor()
+#         new_orders = cur_orders.execute('Select portal_id, portal_account_id from api_neworder no inner join api_dispatchdetails dd on no.dd_id = dd.dd_id_id ')
