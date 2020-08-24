@@ -184,18 +184,24 @@ class ListPicklist(APIView):
             assignee_user = ''
             if assignee_data is not None:
                 assignee = assignee_data.user_id
-                cur_users.execute('Select username from auth_user where id = ' + str(assignee))
-                user_assignee = cur_users.fetchone()
-                if user_assignee is not None:
-                    assignee_user = user_assignee[0]
+                if assignee is not None:
+                    cur_users.execute('Select username from auth_user where id = ' + str(assignee))
+                    user_assignee = cur_users.fetchone()
+                    if user_assignee is not None:
+                        assignee_user = user_assignee[0]
+                else:
+                    assignee_user = ''
             try:
                 picklist_processing_monitor = PicklistProcessingMonitor.objects.get(picklist_id=picklist['id'])
                 packed_quantity = picklist_processing_monitor.items_processed
                 packed_by_user = picklist_processing_monitor.user_id
-                cur_users.execute('Select username from auth_user where id = ' + str(packed_by_user))
-                user_packed = cur_users.fetchone()
-                if user_packed is not None:
-                    packed_by = user_packed[0]
+                if packed_by_user is not None:
+                    cur_users.execute('Select username from auth_user where id = ' + str(packed_by_user))
+                    user_packed = cur_users.fetchone()
+                    if user_packed is not None:
+                        packed_by = user_packed[0]
+                    else:
+                        packed_by = ''
                 else:
                     packed_by = ''
             except PicklistProcessingMonitor.DoesNotExist:
