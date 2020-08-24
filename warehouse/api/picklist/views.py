@@ -738,4 +738,4 @@ class BulkFoundPicklistItem(APIView):
 #                                          host="buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com", port="5432")
 #
 #         cur_orders = conn_orders.cursor()
-#         new_orders = cur_orders.execute('Select portal_id, portal_account_id from api_neworder no inner join api_dispatchdetails dd on no.dd_id = dd.dd_id_id ')
+#         new_orders = cur_orders.execute('Select portal_id, portal_account_id from api_neworder no inner join api_dispatchdetails dd on no.dd_id = dd.dd_id_id where dd.is_mark_placed = True and dd.picklist_id = 0')

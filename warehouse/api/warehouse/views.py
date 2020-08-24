@@ -289,7 +289,7 @@ class WarehouseSelectView(APIView):
 
 class GetExportFile(APIView):
     def get(self, request):
-        id = request.data['id']
+        id = request.query_params['id']
         export_data = dict(requests.get('http://13.232.166.20/user/create_export/'+ str(id) +'/').json())
 
         folder_url = export_data['exfile_url']
