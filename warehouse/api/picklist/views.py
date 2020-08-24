@@ -744,7 +744,7 @@ class NewOrders(APIView):
                                        host="buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com", port="5432")
         cur_orders = conn_orders.cursor()
 
-        query = "Select dd_id, product_id from the api_neworder no inner join api_dispatchdetails dd on no.dd_id = dd.dd_id_id where dd.status='created' and dd.is_mark_placed = True and no.portal_id != 1 and \"dd.bin_Id\" = 0 limit 10"
+        query = "Select no.dd_id, no.product_id from api_neworder no inner join api_dispatchdetails dd on no.dd_id = dd.dd_id_id where dd.status='created' and dd.is_mark_placed = True and no.portal_id != 1 and \"bin_Id\" = 0 limit 10"
         cur_orders.execute(query)
         new_orders = cur_orders.fetchall()
         conn_orders.close()
