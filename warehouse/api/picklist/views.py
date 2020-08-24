@@ -454,9 +454,9 @@ class DownloadPicklist(APIView):
         picklist_id = request.query_params['picklist_id']
         file_path = '/buymore2/picklist/' + picklist_id + '.pdf'
         link = dbx.files_get_temporary_link(file_path).link
-        return {
+        return Response({
             'link': link
-        }
+        })
 
 
 class ExternalPicklistProcess(APIView):
