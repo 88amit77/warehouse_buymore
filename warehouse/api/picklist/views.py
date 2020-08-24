@@ -738,6 +738,50 @@ class BulkFoundPicklistItem(APIView):
             return Response({'status': False, 'message': 'Picklist Items could not be updated'})
 
 
+class NewOrders(APIView):
+    def get(self, request):
+        conn_orders = psycopg2.connect(database="orders", user="postgres", password="buymore2",
+                                       host="buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com", port="5432")
+        cur_orders = conn_orders.cursor()
+
+        query = "Select dd_id, product_id from the api_neworder no inner join api_dispatchdetails dd on no.dd_id = dd.dd_id_id where dd.status='created' and dd.is_mark_placed = True and no.portal_id != 1 and \"dd.bin_Id\" = 0 limit 10"
+        cur_orders.execute(query)
+        new_orders = cur_orders.fetchall()
+        conn_orders.close()
+        return Response({"new_orders": new_orders})
+
+
+class OrderProduct(APIView):
+    def get(self, request):
+        product_id = request.query_params['product_id']
+        conn_products = psycopg2.connect(database="products", user="postgres", password="buymore2",
+                                         host="buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com", port="5432")
+
+        cur_products = conn_products.cursor()
+
+        cur_products.execute('Select amazon_unique_id from amazon_amazonproducts where product_id = ' + str(product_id))
+        # cur_products.execute('Select buymore_sku from master_masterproduct where product_id = ' + str(product_id))
+        product = cur_products.fetchone()
+        if product is not None:
+            resp = product[0]
+        else:
+            resp = False
+        conn_products.close()
+        return Response({'fnsku': resp})
+
+
+class OrderBinUpdate(APIView):
+    def post(self, request):
+        conn_orders = psycopg2.connect(database="orders", user="postgres", password="buymore2",
+                                       host="buymore2.cegnfd8ehfoc.ap-south-1.rds.amazonaws.com", port="5432")
+        cur_orders = conn_orders.cursor()
+        bin_id = request.data['bin']
+        order = request.data['order_id']
+        query = "Update api_dispatchdetails set \"bin_Id\" = '" + bin_id + "' where dd_id_id = " + str(order)
+        cur_orders.execute(query)
+        conn_orders.commit()
+        return Response({'status': True})
+
 # class GetActivePortalAccounts(APIView):
 #     def get(self, request):
 #         conn_orders = psycopg2.connect(database="orders", user="postgres", password="buymore2",

@@ -44,6 +44,9 @@ from .picklist.views import (
     ExternalPicklistProcess,
     PicklistDetailView,
     OrderCount,
+    NewOrders,
+    OrderProduct,
+    OrderBinUpdate,
     DownloadPicklist
 )
 from drf_yasg.views import get_schema_view
@@ -102,6 +105,9 @@ urlpatterns = [
     path('warehouse/get_export_file/', GetExportFile.as_view(), name='get_temp_link'),
     path('warehouse/status/', Status.as_view(), name='status'),
     path('warehouse/picklist_item_process/', PicklistItemProcess.as_view(), name='picklist_item_process'),
+    path('warehouse/new_orders/', NewOrders.as_view(), name='new_orders'),
+    path('warehouse/bin_orders_update/', OrderBinUpdate.as_view(), name='bin_orders_update'),
+    path('warehouse/product_fnsku/', OrderProduct.as_view(), name='product_fnsku'),
     path("warehouse/docs/", schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 ]
 urlpatterns += staticfiles_urlpatterns()
